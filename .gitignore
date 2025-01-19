@@ -1,0 +1,66 @@
+# ===========================
+# Directorios y archivos del frontend
+# ===========================
+frontend/node_modules/
+frontend/dist/
+frontend/.nuxt/            # Si usas Nuxt.js
+frontend/.output/          # Salida de Vite/Nuxt
+frontend/.env.local
+frontend/.env.*             # Archivos de entorno locales
+
+# ===========================
+# Archivos de entorno y configuración
+# ===========================
+.env
+*.env
+.vscode/
+
+# ===========================
+# Archivos y directorios de Python
+# ===========================
+**/__pycache__/
+**/*.py[cod]
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# ===========================
+# Bases de datos y migraciones
+# ===========================
+*.sqlite3
+alembic.ini
+alembic/
+
+# ===========================
+# Logs y archivos temporales
+# ===========================
+*.log
+*.pot
+*.pyc
+
+# ===========================
+# Datos y modelos generados (no versionar)
+# ===========================
+backend/data/
+backend/models/
+
+# ===========================
+# Dependencias y configuraciones de Docker
+# ===========================
+docker-compose.override.yml
+Dockerfile*
+*.dockerfile
+
+# ===========================
+# Otros
+# ===========================
+.DS_Store
+Thumbs.db
