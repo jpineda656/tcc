@@ -1,13 +1,17 @@
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks,Depends
 import os
 import logging
-from utils.preprocessing import preprocess_all_files
+from utils.procesamiento import preprocess_all_files
+from app.core.rol_auth import require_role
+from app.models.usuario_model import User
+
+
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
-    prefix="/trigger",
-    tags=["triggers"]
+    prefix="/procesamiento",
+    tags=["Procesamiento y normalización"]
 )
 
 # Directorios de entrada, salida y almacenamiento
@@ -15,8 +19,11 @@ INPUT_DIR = "data/captures"
 OUTPUT_DIR = "data/processed"
 DATASET_DIR = "dataset"
 
-@router.post("/trigger_preprocessing")
-async def trigger_preprocessing(background_tasks: BackgroundTasks):
+@router.post("/", summary = "Ejecuta la normalización de los puntos de referencia")
+async def trigger_preprocessing(
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(require_role("admin"))
+    ):
     """
     Endpoint para activar el preprocesamiento en segundo plano.
     """

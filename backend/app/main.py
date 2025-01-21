@@ -3,17 +3,17 @@ import logging.config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.models.base_class import Base
-from app.db.connection import engine
+from app.models.clase_base import Base
+from app.db.coneccion import engine
 from app.initial_data import initialize_data
 from app.routers import (
-    preprocessing_router,
-    user_router,
+    procesamiento_router,
+    usuario_router,
     auth_router,
-    role_router,
-    capture_router,
-    training_router,
-    prediction_router
+    rol_router,
+    captura_router,
+    entrenamiento_router,
+    evaluacion_router
 )
 
 # Configuración centralizada de logging
@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.PROJECT_VERSION,
-    description="API para la gestión de usuarios y roles."
+    description="API para captura, procesamiento y entrenamiento de puntos de referencias aplicando redes neuronales LSTM."
 )
 
 # Configurar CORS
@@ -69,16 +69,13 @@ initialize_data()
 # Registrar routers de forma modular
 routers = [
     auth_router.router,
-    user_router.router,
-    role_router.router,
-    capture_router.router,
-    preprocessing_router.router,
-    training_router.router,
-    prediction_router.router
+    usuario_router.router,
+    rol_router.router,
+    captura_router.router,
+    procesamiento_router.router,
+    entrenamiento_router.router,
+    evaluacion_router.router
 ]
 for r in routers:
     app.include_router(r)
 
-@app.get("/ping", tags=["Health"])
-def ping():
-    return {"message": "pong"}

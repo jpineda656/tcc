@@ -6,22 +6,28 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
-from app.db.connection import get_db
-from app.schemas.capture_schema import CaptureRequest
+from app.db.coneccion import get_db
+from app.schemas.captura_schema import CaptureRequest
+from app.core.rol_auth import require_role
+from app.models.usuario_model import User
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/captura",
-    tags=["captura"]
+    tags=["Captura de puntos de referencia"]
 )
 
 # Directorio donde se guardarán los archivos
-DATA_DIR = "data/captures"
+DATA_DIR = "data/capturas"
 os.makedirs(DATA_DIR, exist_ok=True)  # Crear directorio si no existe
 
 @router.post("/", status_code=status.HTTP_201_CREATED, summary="Capturar datos de referencia")
-async def capture_data(data: CaptureRequest, db: Session = Depends(get_db)):
+async def capture_data(
+    data: CaptureRequest, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
+    ):
     """
     Recibe datos de referencia para una palabra en lenguaje de señas y los guarda en un archivo JSON.
     - **label**: Palabra asociada.
