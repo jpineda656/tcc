@@ -7,7 +7,7 @@ const DashboardView = () => import("@/views/DashboardView.vue");
 const UsersView = () => import("@/views/UsersView.vue");
 const RolesView = () => import("@/views/RolesView.vue");
 const CameraView = () => import("@/views/CameraView.vue");
-const NotFoundView = () => import("@/views/NotFoundView.vue");
+// const NotFoundView = () => import("@/views/NotFoundView.vue");
 const CameraEvaluationView = () => import("@/views/CameraEvaluationView.vue");
 
 const routes = [
@@ -17,7 +17,7 @@ const routes = [
   { path: "/users", name: "Users", component: UsersView, meta: { requiresAuth: true } },
   { path: "/roles", name: "Roles", component: RolesView, meta: { requiresAuth: true } },
   { path: "/camera", name: "Camera", component: CameraView, meta: { requiresAuth: true } },
-  { path: "/:catchAll(.*)", name: "NotFound", component: NotFoundView },
+  // { path: "/:catchAll(.*)", name: "NotFound", component: NotFoundView },
 ];
 
 const router = createRouter({
