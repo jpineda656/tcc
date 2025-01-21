@@ -1,18 +1,18 @@
-<!-- views/CameraView.vue -->
+<!-- src/views/CameraEvaluationView.vue -->
 <template>
-  
+
   <div class="camera-container">
-    <!-- Sección de Configuración / Acciones -->
+    <!-- Panel de Controles -->
     <div class="controls">
       <h2>Evaluación del Modelo con MediaPipe</h2>
 
       <!-- Botón para activar/desactivar la cámara -->
-      <button 
+      <button
         class="btn-camera"
         :class="{ active: isCameraActive }"
         @click="toggleCamera"
       >
-        {{ isCameraActive ? 'Detener cámara' : 'Iniciar cámara' }}
+        {{ isCameraActive ? "Detener Cámara" : "Iniciar Cámara" }}
       </button>
 
       <!-- Botones para grabación (sin necesidad de palabra/seña) -->
@@ -48,35 +48,32 @@
     <div class="camera-view">
       <!-- Video (oculto si no deseas mostrarlo) -->
       <video ref="videoRef" class="video-preview" playsinline></video>
-      
+
       <!-- Canvas donde se dibujan los landmarks -->
       <canvas ref="canvasRef" class="output-canvas"></canvas>
     </div>
-
   </div>
 </template>
 
 <script setup>
-import TheNavbar from "@/components/TheNavbar.vue"
-import { onMounted, ref } from 'vue'
+import TheNavbar from "@/components/TheNavbar.vue";
+import { onMounted, ref } from "vue";
 
 // Composable para inicializar Holistic y manejar la cámara
-import { useHolistic } from '@/utils/mediapipeUtils'
+import { useHolistic } from "@/utils/mediapipeUtils";
 // Composable para dibujar landmarks
-import { useDrawing } from '@/utils/drawingUtils'
+import { useDrawing } from "@/utils/drawingUtils";
 // Composable para la lógica de grabación (cuenta regresiva, captura)
-import { useRecording } from '@/utils/recordingUtils'
-import { log } from "@tensorflow/tfjs"
+import { useRecording } from "@/utils/recordingUtils";
 
-// Importamos métodos de dibujo
+// Importar métodos de dibujo
 const { 
   drawFaceLandmarks, 
   drawPoseLandmarks, 
   drawHandLandmarks 
-} = useDrawing()
+} = useDrawing();
 
-// useRecording: controla la lógica de cuenta regresiva y captura
-// Eliminamos la lógica de 'signLabel' porque no necesitamos palabra
+// El composable `useRecording` controla la cuenta regresiva y captura
 const { 
   isRecording,
   isPreparing,
@@ -86,10 +83,10 @@ const {
   startRecording,
   stopRecording,
   handleResults
-} = useRecording()
+} = useRecording();
 
-// Variable para mostrar mensaje de éxito en pantalla
-const successMessage = ref('')
+// Variable para mostrar el mensaje de éxito
+const successMessage = ref("");
 
 /**
  * Función para enviar datos al backend cuando termina la grabación
@@ -97,85 +94,81 @@ const successMessage = ref('')
  */
 async function sendDataCallback(bodyData) {
   try {
-    // En este endpoint, el backend realizará la evaluación
-    // (p.ej. /realtime_evaluate)
-    const response = await fetch('http://localhost:8000/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bodyData) 
-    })
+    // Ejemplo: el backend podría evaluar en /realtime_evaluate
+    const response = await fetch("http://localhost:8000/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bodyData),
+    });
     if (!response.ok) {
-      throw new Error(`Error en el servidor: ${response.status}`)
+      throw new Error(`Error en el servidor: ${response.status}`);
     }
-    const result = await response.json()
+    const result = await response.json();
 
-    // Mostramos el resultado de la inferencia
-    successMessage.value = `Predicción: ${result.predicted_label} (confianza: ${result.confidence.toFixed(2)})`
+    // Mostrar el resultado de la inferencia
+    successMessage.value = `Predicción: ${result.predicted_label} (confianza: ${result.confidence.toFixed(2)})`;
 
     // Limpiar el mensaje después de 3 segundos
     setTimeout(() => {
-      successMessage.value = ''
-    }, 3000)
+      successMessage.value = "";
+    }, 3000);
   } catch (error) {
-    console.error('Error al enviar datos para evaluación:', error)
-    alert('Ocurrió un error al enviar los datos para evaluación.')
+    console.error("Error al enviar datos para evaluación:", error);
+    alert("Ocurrió un error al enviar los datos para evaluación.");
   }
 }
 
 /**
- * stopRecording con la callback para envío de datos
+ * Detener la grabación con la callback de evaluación
  */
 async function stopRecordingWithSend() {
-  await stopRecording(sendDataCallback)
+  await stopRecording(sendDataCallback);
 }
 
 /* ==========================
-   1) Callback de Holistic
+   Callback de Holistic
    ========================== */
 function onResultsHolistic(results) {
-  const canvas = canvasRef.value
-  const ctx = canvas.getContext('2d')
-  canvas.width = videoRef.value.videoWidth
-  canvas.height = videoRef.value.videoHeight
+  const canvas = canvasRef.value;
+  const ctx = canvas.getContext("2d");
+  canvas.width = videoRef.value.videoWidth;
+  canvas.height = videoRef.value.videoHeight;
 
-  ctx.save()
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height)
+  ctx.save();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-  // Dibujo de rostro
-  drawFaceLandmarks(ctx, results.faceLandmarks)
-  // Dibujo de pose
-  drawPoseLandmarks(ctx, results.poseLandmarks)
-  // Dibujo de manos
-  drawHandLandmarks(ctx, results.rightHandLandmarks, '#CC0000', '#00FFFF')
-  drawHandLandmarks(ctx, results.leftHandLandmarks, '#00CC00', '#FFFF00')
+  // Dibujo de landmarks (rostro, pose, manos)
+  drawFaceLandmarks(ctx, results.faceLandmarks);
+  drawPoseLandmarks(ctx, results.poseLandmarks);
+  drawHandLandmarks(ctx, results.rightHandLandmarks, "#CC0000", "#00FFFF");
+  drawHandLandmarks(ctx, results.leftHandLandmarks, "#00CC00", "#FFFF00");
+  ctx.restore();
 
-  ctx.restore()
+  // Determina si hay manos
+  const handDetected = !!(results.rightHandLandmarks || results.leftHandLandmarks);
 
-  // Determinar si hay manos
-  const handDetected = !!(results.rightHandLandmarks || results.leftHandLandmarks)
-
-  // Puntos de referencia capturados (cara, manos, pose)
-  const frameData = {}
+  // frameData: cara, manos, pose
+  const frameData = {};
   if (results.faceLandmarks) {
-    frameData.face = results.faceLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }))
+    frameData.face = results.faceLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }));
   }
   if (results.rightHandLandmarks) {
-    frameData.rightHand = results.rightHandLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }))
+    frameData.rightHand = results.rightHandLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }));
   }
   if (results.leftHandLandmarks) {
-    frameData.leftHand = results.leftHandLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }))
+    frameData.leftHand = results.leftHandLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }));
   }
   if (results.poseLandmarks) {
-    frameData.pose = results.poseLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }))
+    frameData.pose = results.poseLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }));
   }
 
-  // Llamamos al manejador de resultados de grabación
-  handleResults(handDetected, frameData, sendDataCallback)
+  // Usar el composable de grabación
+  handleResults(handDetected, frameData, sendDataCallback);
 }
 
 /* ==========================
-   2) useHolistic
+   Inicialización de Holistic
    ========================== */
 const {
   videoRef,
@@ -183,13 +176,9 @@ const {
   initHolistic,
   toggleCamera,
   isCameraActive
-} = useHolistic(onResultsHolistic)
+} = useHolistic(onResultsHolistic);
 
-/* ==========================
-   3) Ciclo de vida
-   ========================== */
 onMounted(() => {
-  // Inicializar Holistic de inmediato en onMounted.
   initHolistic(
     {
       modelComplexity: 2,
@@ -201,54 +190,66 @@ onMounted(() => {
       useCpuInference: false,
       webGlVersion: 2,
     },
-    '' // Ruta local para WASM si no deseas usar un CDN
-  )
-})
+    "" // Ruta local (vacía) o ajusta si usas un CDN/archivo WASM
+  );
+});
 </script>
 
 <style scoped>
+
+/* Contenedor principal */
 .camera-container {
   display: flex;
   flex-direction: row;
   gap: 2rem;
   margin: 1rem 2rem;
+  background-color: var(--dark-gray);
+  color: var(--text-color);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* Sección de controles / acciones */
+/* Panel de controles */
 .controls {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  background-color: var(--medium-gray);
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 .controls h2 {
   margin: 0;
   font-size: 1.2rem;
   font-weight: 600;
+  color: var(--white);
 }
 
-/* Botón para iniciar/detener cámara */
+/* Botón de cámara */
 .btn-camera {
-  background-color: #2c3e50;
-  color: #fff;
+  background-color: var(--primary-color);
+  color: var(--white);
   padding: 0.5rem 1rem;
   border: none;
   cursor: pointer;
-  transition: background-color 0.3s ease;
   font-weight: 500;
   border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
 .btn-camera.active {
-  background-color: #e74c3c;
+  background-color: var(--danger-color);
 }
 
 .btn-camera:hover {
-  background-color: #34495e;
+  background-color: var(--accent-color);
 }
 
-/* Sección de botones de grabación */
+/* Botones de grabación */
 .recording-buttons {
   display: flex;
   gap: 1rem;
@@ -256,7 +257,7 @@ onMounted(() => {
 
 .btn-record {
   background-color: #27ae60;
-  color: #fff;
+  color: var(--white);
   border: none;
   padding: 0.5rem 1.2rem;
   cursor: pointer;
@@ -275,8 +276,8 @@ onMounted(() => {
 }
 
 .btn-stop {
-  background-color: #e74c3c;
-  color: #fff;
+  background-color: var(--danger-color);
+  color: var(--white);
   border: none;
   padding: 0.5rem 1.2rem;
   cursor: pointer;
@@ -294,9 +295,9 @@ onMounted(() => {
   background-color: #c0392b;
 }
 
-/* Mensaje de cuenta regresiva */
+/* Cuenta regresiva */
 .countdown-message {
-  color: #e74c3c;
+  color: var(--danger-color);
   font-weight: 600;
   font-size: 1.1rem;
 }
@@ -309,7 +310,7 @@ onMounted(() => {
   margin-top: 1rem;
 }
 
-/* Sección de la cámara y canvas */
+/* Sección de cámara y canvas */
 .camera-view {
   flex: 2;
   display: flex;
@@ -319,8 +320,8 @@ onMounted(() => {
 }
 
 .video-preview {
-  display: none; /* Oculta el video si solo quieres mostrar el canvas */
-  border: 1px solid #ccc;
+  display: none; /* Oculta el video si prefieres solo canvas */
+  border: 1px solid var(--light-gray);
   width: 600px;
   height: 500px;
   background-color: #000;
@@ -328,7 +329,7 @@ onMounted(() => {
 }
 
 .output-canvas {
-  border: 1px solid #ccc;
+  border: 1px solid var(--light-gray);
   width: 600px;
   height: 500px;
 }

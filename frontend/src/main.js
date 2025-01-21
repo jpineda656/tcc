@@ -4,6 +4,7 @@ import App from "./App.vue";
 import router from "@/router";
 import pinia from "@/store";
 import { useAuthStore } from "@/store/auth";
+import './style.css'
 
 const app = createApp(App);
 

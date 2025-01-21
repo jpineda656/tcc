@@ -3,16 +3,26 @@
   <nav class="navbar">
     <div class="navbar-container">
       <ul class="navbar-links">
-        <li><router-link to="/dashboard" aria-label="Ir al Dashboard">Dashboard</router-link></li>
-        <li><router-link to="/users" aria-label="Gestionar usuarios">Usuarios</router-link></li>
-        <li><router-link to="/roles" aria-label="Gestionar roles">Roles</router-link></li>
-        <li><router-link to="/camera" aria-label="Abrir cámara">Capturar Señas</router-link></li>
+        <li>
+          <router-link to="/dashboard" aria-label="Ir al Dashboard">Dashboard</router-link>
+        </li>
+        <li>
+          <router-link to="/camera" aria-label="Abrir cámara">Capturar Señas</router-link>
+        </li>
+        <li>
+          <router-link to="/users" aria-label="Gestionar usuarios">Usuarios</router-link>
+        </li>
+        <li>
+          <router-link to="/roles" aria-label="Gestionar roles">Roles</router-link>
+        </li>
       </ul>
-      <button class="btn btn-secondary" @click="handleLogout" aria-label="Cerrar sesión">Logout</button>
+
+      <button class="btn-logout" @click="handleLogout" aria-label="Cerrar sesión">
+        Logout
+      </button>
     </div>
   </nav>
 </template>
-
 
 <script setup>
 import { useAuthStore } from "@/store/auth";
@@ -33,8 +43,10 @@ async function handleLogout() {
 </script>
 
 <style scoped>
+
+
 .navbar {
-  background-color: #2c3e50;
+  background-color: var(--primary-color);
   padding: 0.75rem 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -50,32 +62,54 @@ async function handleLogout() {
   display: flex;
   gap: 1rem;
   margin: 0;
+  padding: 0; /* elimina posibles paddings por defecto */
+}
+
+.navbar-links li {
+  /* puedes añadir estilos individuales si lo deseas */
 }
 
 .navbar a {
-  color: #ffffff;
+  color: var(--white);
   font-weight: 500;
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 .navbar a:hover {
-  color: #1abc9c;
+  color: var(--accent-color); 
 }
 
 .navbar a.router-link-active {
-  color: #1abc9c;
+  color: var(--accent-color);
 }
 
-.btn-secondary {
-  background-color: #e74c3c;
-  color: #ffffff;
+/* Botón Logout */
+.btn-logout {
+  background-color: var(--danger-color);
+  color: var(--white);
   padding: 0.5rem 1rem;
-  border-radius: 5px;
-  font-size: 1rem;
+  border-radius: 4px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.btn-secondary:hover {
-  background-color: #c0392b;
+.btn-logout:hover {
+  /* Un tono más oscuro del danger color, o el que desees */
+  background-color: #c0392b; 
+}
+
+/* Ajustar responsividad */
+@media (max-width: 768px) {
+  .navbar-links {
+    flex-direction: column;
+  }
+  .navbar-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>
