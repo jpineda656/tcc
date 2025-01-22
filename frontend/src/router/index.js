@@ -7,6 +7,8 @@ const DashboardView = () => import("@/views/DashboardView.vue");
 const UsersView = () => import("@/views/UsersView.vue");
 const RolesView = () => import("@/views/RolesView.vue");
 const CameraView = () => import("@/views/CameraView.vue");
+const ProcessView = () => import("@/views/ProcessView.vue");
+
 // const NotFoundView = () => import("@/views/NotFoundView.vue");
 const CameraEvaluationView = () => import("@/views/CameraEvaluationView.vue");
 
@@ -14,9 +16,10 @@ const routes = [
   { path: "/login", name: "Login", component: LoginView },
   { path: "/", name: "/", component: CameraEvaluationView },
   { path: "/dashboard", name: "Dashboard", component: DashboardView, meta: { requiresAuth: true } },
+  { path: "/camera", name: "Camera", component: CameraView, meta: { requiresAuth: true } },
+  { path: "/process", name: "Process", component: ProcessView, meta: { requiresAuth: true } },
   { path: "/users", name: "Users", component: UsersView, meta: { requiresAuth: true } },
   { path: "/roles", name: "Roles", component: RolesView, meta: { requiresAuth: true } },
-  { path: "/camera", name: "Camera", component: CameraView, meta: { requiresAuth: true } },
   // { path: "/:catchAll(.*)", name: "NotFound", component: NotFoundView },
 ];
 

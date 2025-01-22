@@ -10,6 +10,9 @@
           <router-link to="/camera" aria-label="Abrir cámara">Capturar Señas</router-link>
         </li>
         <li>
+          <router-link to="/process" aria-label="Procesar">Procesar</router-link>
+        </li>
+        <li>
           <router-link to="/users" aria-label="Gestionar usuarios">Usuarios</router-link>
         </li>
         <li>

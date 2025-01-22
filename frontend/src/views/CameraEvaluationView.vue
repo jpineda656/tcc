@@ -15,7 +15,7 @@
         {{ isCameraActive ? "Detener Cámara" : "Iniciar Cámara" }}
       </button>
 
-      <!-- Botones para grabación (sin necesidad de palabra/seña) -->
+      <!-- Sección de Botones de grabación -->
       <div class="recording-buttons">
         <button
           class="btn-record"
@@ -38,9 +38,12 @@
         <span>Comenzando en {{ countdown }}...</span>
       </div>
 
-      <!-- Mensaje de éxito -->
-      <div v-if="successMessage" class="success-message">
-        {{ successMessage }}
+      <!-- Sección para mostrar texto completo detectado -->
+      <div class="recognized-words" v-if="recognizedWords.length">
+        <h4>Texto detectado:</h4>
+        <p class="words-list">
+          {{ recognizedWords.join(" ") }}
+        </p>
       </div>
     </div>
 
@@ -56,24 +59,22 @@
 </template>
 
 <script setup>
-import TheNavbar from "@/components/TheNavbar.vue";
-import { onMounted, ref } from "vue";
+import TheNavbar from "@/components/TheNavbar.vue"
+import { onMounted, ref } from 'vue'
 
 // Composable para inicializar Holistic y manejar la cámara
-import { useHolistic } from "@/utils/mediapipeUtils";
+import { useHolistic } from '@/utils/mediapipeUtils'
 // Composable para dibujar landmarks
-import { useDrawing } from "@/utils/drawingUtils";
+import { useDrawing } from '@/utils/drawingUtils'
 // Composable para la lógica de grabación (cuenta regresiva, captura)
-import { useRecording } from "@/utils/recordingUtils";
+import { useRecording } from '@/utils/recordingUtils'
 
-// Importar métodos de dibujo
 const { 
   drawFaceLandmarks, 
   drawPoseLandmarks, 
   drawHandLandmarks 
-} = useDrawing();
+} = useDrawing()
 
-// El composable `useRecording` controla la cuenta regresiva y captura
 const { 
   isRecording,
   isPreparing,
@@ -83,88 +84,85 @@ const {
   startRecording,
   stopRecording,
   handleResults
-} = useRecording();
+} = useRecording()
 
-// Variable para mostrar el mensaje de éxito
-const successMessage = ref("");
+// Variable para almacenar las palabras detectadas de forma acumulada
+const recognizedWords = ref([])
 
 /**
  * Función para enviar datos al backend cuando termina la grabación
- * (similar a la captura de puntos, pero aquí se usa para evaluación).
+ * (aquí se usa para evaluación en tiempo real, por ej. /realtime_evaluate).
  */
 async function sendDataCallback(bodyData) {
   try {
-    // Ejemplo: el backend podría evaluar en /realtime_evaluate
-    const response = await fetch("http://localhost:8000/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bodyData),
-    });
+    const response = await fetch('http://localhost:8000/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bodyData)
+    })
     if (!response.ok) {
-      throw new Error(`Error en el servidor: ${response.status}`);
+      throw new Error(`Error en el servidor: ${response.status}`)
     }
-    const result = await response.json();
 
-    // Mostrar el resultado de la inferencia
-    successMessage.value = `Predicción: ${result.predicted_label} (confianza: ${result.confidence.toFixed(2)})`;
-
-    // Limpiar el mensaje después de 3 segundos
-    setTimeout(() => {
-      successMessage.value = "";
-    }, 3000);
+    const result = await response.json()
+    // Supongamos que el backend retorna "predicted_label" y "confidence"
+    if (result.predicted_label) {
+      // Agregar la palabra detectada al arreglo de palabras
+      recognizedWords.value.push(result.predicted_label)
+    }
   } catch (error) {
-    console.error("Error al enviar datos para evaluación:", error);
-    alert("Ocurrió un error al enviar los datos para evaluación.");
+    console.error('Error al enviar datos para evaluación:', error)
+    alert('Ocurrió un error al enviar los datos para evaluación.')
   }
 }
 
 /**
- * Detener la grabación con la callback de evaluación
+ * Detener la grabación con la callback anterior.
  */
 async function stopRecordingWithSend() {
-  await stopRecording(sendDataCallback);
+  await stopRecording(sendDataCallback)
 }
 
 /* ==========================
    Callback de Holistic
    ========================== */
 function onResultsHolistic(results) {
-  const canvas = canvasRef.value;
-  const ctx = canvas.getContext("2d");
-  canvas.width = videoRef.value.videoWidth;
-  canvas.height = videoRef.value.videoHeight;
+  const canvas = canvasRef.value
+  const ctx = canvas.getContext('2d')
+  canvas.width = videoRef.value.videoWidth
+  canvas.height = videoRef.value.videoHeight
 
-  ctx.save();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+  ctx.save()
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height)
 
-  // Dibujo de landmarks (rostro, pose, manos)
-  drawFaceLandmarks(ctx, results.faceLandmarks);
-  drawPoseLandmarks(ctx, results.poseLandmarks);
-  drawHandLandmarks(ctx, results.rightHandLandmarks, "#CC0000", "#00FFFF");
-  drawHandLandmarks(ctx, results.leftHandLandmarks, "#00CC00", "#FFFF00");
-  ctx.restore();
+  // Dibujar landmarks
+  drawFaceLandmarks(ctx, results.faceLandmarks)
+  drawPoseLandmarks(ctx, results.poseLandmarks)
+  drawHandLandmarks(ctx, results.rightHandLandmarks, '#CC0000', '#00FFFF')
+  drawHandLandmarks(ctx, results.leftHandLandmarks, '#00CC00', '#FFFF00')
+  ctx.restore()
 
-  // Determina si hay manos
-  const handDetected = !!(results.rightHandLandmarks || results.leftHandLandmarks);
+  // Determinar si hay manos detectadas
+  const handDetected = !!(results.rightHandLandmarks || results.leftHandLandmarks)
 
   // frameData: cara, manos, pose
-  const frameData = {};
+  const frameData = {}
   if (results.faceLandmarks) {
-    frameData.face = results.faceLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }));
+    frameData.face = results.faceLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }))
   }
   if (results.rightHandLandmarks) {
-    frameData.rightHand = results.rightHandLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }));
+    frameData.rightHand = results.rightHandLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }))
   }
   if (results.leftHandLandmarks) {
-    frameData.leftHand = results.leftHandLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }));
+    frameData.leftHand = results.leftHandLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }))
   }
   if (results.poseLandmarks) {
-    frameData.pose = results.poseLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }));
+    frameData.pose = results.poseLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }))
   }
 
-  // Usar el composable de grabación
-  handleResults(handDetected, frameData, sendDataCallback);
+  // Lógica de grabación
+  handleResults(handDetected, frameData, sendDataCallback)
 }
 
 /* ==========================
@@ -176,7 +174,7 @@ const {
   initHolistic,
   toggleCamera,
   isCameraActive
-} = useHolistic(onResultsHolistic);
+} = useHolistic(onResultsHolistic)
 
 onMounted(() => {
   initHolistic(
@@ -190,14 +188,14 @@ onMounted(() => {
       useCpuInference: false,
       webGlVersion: 2,
     },
-    "" // Ruta local (vacía) o ajusta si usas un CDN/archivo WASM
-  );
-});
+    '' // Ruta local al WASM o CDN si deseas
+  )
+})
 </script>
 
 <style scoped>
 
-/* Contenedor principal */
+
 .camera-container {
   display: flex;
   flex-direction: row;
@@ -210,7 +208,6 @@ onMounted(() => {
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* Panel de controles */
 .controls {
   flex: 1;
   display: flex;
@@ -229,7 +226,6 @@ onMounted(() => {
   color: var(--white);
 }
 
-/* Botón de cámara */
 .btn-camera {
   background-color: var(--primary-color);
   color: var(--white);
@@ -249,7 +245,6 @@ onMounted(() => {
   background-color: var(--accent-color);
 }
 
-/* Botones de grabación */
 .recording-buttons {
   display: flex;
   gap: 1rem;
@@ -270,7 +265,6 @@ onMounted(() => {
   cursor: not-allowed;
   opacity: 0.6;
 }
-
 .btn-record:hover:not(:disabled) {
   background-color: #2ecc71;
 }
@@ -290,24 +284,28 @@ onMounted(() => {
   cursor: not-allowed;
   opacity: 0.6;
 }
-
 .btn-stop:hover:not(:disabled) {
   background-color: #c0392b;
 }
 
-/* Cuenta regresiva */
 .countdown-message {
   color: var(--danger-color);
   font-weight: 600;
   font-size: 1.1rem;
 }
 
-/* Mensaje de éxito */
-.success-message {
-  color: #27ae60;
-  font-weight: bold;
-  font-size: 1rem;
+/* Palabras detectadas */
+.recognized-words {
   margin-top: 1rem;
+  background-color: var(--dark-gray);
+  padding: 0.5rem;
+  border-radius: 4px;
+  color: var(--white);
+}
+
+.recognized-words .words-list {
+  margin: 0;
+  font-size: 1rem;
 }
 
 /* Sección de cámara y canvas */
@@ -320,7 +318,7 @@ onMounted(() => {
 }
 
 .video-preview {
-  display: none; /* Oculta el video si prefieres solo canvas */
+  display: none; /* Oculte el video si desea solo canvas */
   border: 1px solid var(--light-gray);
   width: 600px;
   height: 500px;
