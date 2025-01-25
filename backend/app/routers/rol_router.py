@@ -2,8 +2,8 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.coneccion import get_db
-from app.schemas.rol_schema import RoleCreate, RoleResponse
-from app.services.rol_service import create_role, get_all_roles, delete_role
+from app.schemas.rol_schema import RoleCreate, RoleResponse, RoleUpdate
+from app.services.rol_service import create_role,update_role,  get_all_roles, delete_role
 from app.core.rol_auth import require_role
 from app.models.usuario_model import User
 
@@ -26,6 +26,15 @@ def create_role_endpoint(
     """
     logger.info(f"Usuario {current_user.correo} intenta crear un nuevo rol: {role_data.name}")
     return create_role(db, role_data)
+
+@router.put("/{role_id}", response_model=RoleResponse, summary="Actualizar un Rol existente")
+def update_role_endpoint(
+    role_id: int, 
+    role_update: RoleUpdate, 
+    db: Session = Depends(get_db)
+):
+    logger.info(f"Actualización del Rol ID: {role_id}")
+    return update_role(db, role_id, role_update)
 
 @router.get("/", response_model=list[RoleResponse], summary="Listar todos los roles")
 def get_all_roles_endpoint(

@@ -10,7 +10,7 @@ class RoleBase(BaseModel):
         return value
 
 class RoleCreate(RoleBase):
-    name: str = Field(..., min_length=6, example="supervisor")
+    name: str = Field(..., min_length=4, example="supervisor")
     
 class RoleUpdate(BaseModel):
     name: str | None = None

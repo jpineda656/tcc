@@ -74,12 +74,16 @@ import { useHolistic } from "@/utils/mediapipeUtils";
 import { useDrawing } from "@/utils/drawingUtils";
 import { useRecording } from "@/utils/recordingUtils";
 
+import axios from "@/services/api";
+
+// Dibujo (cara, pose, manos)
 const { 
   drawFaceLandmarks, 
   drawPoseLandmarks, 
   drawHandLandmarks 
 } = useDrawing();
 
+// Lógica de grabación
 const {
   signLabel,
   isRecording,
@@ -95,22 +99,15 @@ const {
 // Mensaje de éxito
 const successMessage = ref("");
 
+
+
 /**
  * Callback para enviar datos al backend.
  * Puedes modificar la URL o usar axios.
  */
 async function sendDataCallback(bodyData) {
   try {
-    const response = await fetch("http://localhost:8000/captura", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bodyData),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error en el servidor: ${response.status}`);
-    }
-
+    const response = await axios.post("/captura", bodyData);
     successMessage.value = "Datos enviados correctamente al servidor";
     // Limpiar el mensaje después de 3 segundos
     setTimeout(() => {
