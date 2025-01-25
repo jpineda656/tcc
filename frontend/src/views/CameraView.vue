@@ -8,46 +8,44 @@
       <h2>Captura de Señas con MediaPipe</h2>
 
       <!-- Botón para activar/desactivar la cámara -->
-      <button
-        class="btn-camera"
-        :class="{ active: isCameraActive }"
-        @click="toggleCamera"
-      >
+      <button class="btn-camera" :class="{ active: isCameraActive }" @click="toggleCamera">
         {{ isCameraActive ? 'Detener Cámara' : 'Iniciar Cámara' }}
       </button>
 
       <!-- Input para la palabra/seña -->
       <div class="sign-input">
         <label for="sign-label">Palabra/Seña</label>
-        <input
-          id="sign-label"
-          v-model="signLabel"
-          type="text"
-          placeholder="Ej: Hola"
-        />
+        <input id="sign-label" v-model="signLabel" type="text" placeholder="Ej: Hola" />
       </div>
 
       <!-- Botones de grabación -->
       <div class="recording-buttons">
-        <button
-          class="btn-record"
-          @click="prepareRecording"
-          :disabled="!isCameraActive || isPreparing || isRecording"
-        >
+        <button class="btn-record" @click="prepareRecording" :disabled="!isCameraActive || isPreparing || isRecording">
           Iniciar Grabación
         </button>
-        <button
-          class="btn-stop"
-          @click="stopRecordingWithSend"
-          :disabled="!isCameraActive || (!isPreparing && !isRecording)"
-        >
+        <button class="btn-stop" @click="stopRecordingWithSend"
+          :disabled="!isCameraActive || (!isPreparing && !isRecording)">
           Detener y Enviar
         </button>
       </div>
 
-      <!-- Cuenta regresiva -->
-      <div v-if="isPreparing" class="countdown-message">
-        <span>Comenzando en {{ countdown }}...</span>
+      <!-- Mensajes de estado: cuenta regresiva o grabando -->
+      <div class="status-message">
+        <!-- Mostrar cuenta regresiva si isPreparing -->
+        <div v-if="isPreparing" class="countdown-message">
+          <span>Comenzando en {{ countdown }}...</span>
+        </div>
+
+        <!-- Mostrar "Grabando" si isRecording -->
+        <div v-else-if="isRecording" class="recording-indicator">
+          <span>Grabando...</span>
+          <span>Fotogramas capturados: {{ capturedFrames.length }}</span>
+        </div>
+      </div>
+
+      <!-- Contador de gestos capturados en la sesión -->
+      <div class="session-count" v-if="capturedGesturesCount > 0">
+        <p>Gestos capturados en esta sesión: {{ capturedGesturesCount }}</p>
       </div>
 
       <!-- Mensaje de éxito -->
@@ -77,10 +75,10 @@ import { useRecording } from "@/utils/recordingUtils";
 import axios from "@/services/api";
 
 // Dibujo (cara, pose, manos)
-const { 
-  drawFaceLandmarks, 
-  drawPoseLandmarks, 
-  drawHandLandmarks 
+const {
+  drawFaceLandmarks,
+  drawPoseLandmarks,
+  drawHandLandmarks
 } = useDrawing();
 
 // Lógica de grabación
@@ -93,7 +91,8 @@ const {
   prepareRecording,
   startRecording,
   stopRecording,
-  handleResults
+  handleResults,
+  capturedGesturesCount
 } = useRecording();
 
 // Mensaje de éxito
@@ -214,7 +213,11 @@ onMounted(() => {
 
 <style scoped>
 
-
+.recording-indicator span:first-child {
+  color: #27ae60; /* Verde */
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
 /* Contenedor principal */
 .camera-container {
   display: flex;
@@ -225,7 +228,7 @@ onMounted(() => {
   color: var(--text-color);
   border-radius: 8px;
   padding: 1rem;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Sección de controles (lado izquierdo) */
@@ -237,7 +240,7 @@ onMounted(() => {
   background-color: var(--medium-gray);
   padding: 1rem;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .controls h2 {
@@ -361,7 +364,8 @@ onMounted(() => {
 
 /* Video de previsualización */
 .video-preview {
-  display: none; /* Ocúltalo si no deseas mostrarlo */
+  display: none;
+  /* Ocúltalo si no deseas mostrarlo */
   border: 1px solid var(--light-gray);
   width: 600px;
   height: 500px;

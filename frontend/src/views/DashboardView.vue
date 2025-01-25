@@ -3,7 +3,7 @@
   <div>
     <TheNavbar />
     <div class="dashboard-container">
-      <h2>Bienvenido al Dashboard</h2>
+      <h2>Bienvenido PoÑe'e APP</h2>
       <p>Usuario logueado: {{ username }}</p>
     </div>
   </div>
