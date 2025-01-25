@@ -17,6 +17,7 @@ class MetadatosCaptura(Base):
     label = Column(String(100), nullable=False)
     frames_count = Column(Integer, nullable=False, default=0)
     
+    
     # Fecha/hora en que se generó la captura
     created_at = Column(DateTime, default=datetime.utcnow)
 

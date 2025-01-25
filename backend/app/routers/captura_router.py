@@ -7,6 +7,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from app.db.coneccion import get_db
+from app.models.metadatos_captura_model import MetadatosCaptura
 from app.schemas.captura_schema import CaptureRequest
 from app.core.rol_auth import require_role
 from app.models.usuario_model import User
@@ -46,6 +47,17 @@ async def capture_data(
             await file.write(content)
 
         logger.info(f"Datos capturados y guardados en {file_path}")
+        # Guarda metadatos
+        frames_count = len(data.framesData)
+        nuevos_metadatos = MetadatosCaptura(
+            user_id=current_user.id,
+            label=data.label,
+            frames_count=frames_count
+        )
+        db.add(nuevos_metadatos)
+        db.commit()
+        db.refresh(nuevos_metadatos)
+        
         return {"message": "Datos capturados y guardados correctamente.", "file": file_name}
     except Exception as e:
         logger.exception(f"Error al guardar los datos: {e}")
