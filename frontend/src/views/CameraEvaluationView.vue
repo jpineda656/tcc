@@ -59,7 +59,6 @@
 </template>
 
 <script setup>
-import TheNavbar from "@/components/TheNavbar.vue"
 import { onMounted, ref } from 'vue'
 
 // Composable para inicializar Holistic y manejar la cámara
@@ -68,6 +67,7 @@ import { useHolistic } from '@/utils/mediapipeUtils'
 import { useDrawing } from '@/utils/drawingUtils'
 // Composable para la lógica de grabación (cuenta regresiva, captura)
 import { useRecording } from '@/utils/recordingUtils'
+import axios from "@/services/api";
 
 const { 
   drawFaceLandmarks, 
@@ -93,29 +93,23 @@ const recognizedWords = ref([])
  * Función para enviar datos al backend cuando termina la grabación
  * (aquí se usa para evaluación en tiempo real, por ej. /realtime_evaluate).
  */
-async function sendDataCallback(bodyData) {
+ async function sendDataCallback(bodyData) {
   try {
-    const response = await fetch('http://localhost:8000/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bodyData)
-    })
-    if (!response.ok) {
-      throw new Error(`Error en el servidor: ${response.status}`)
+    const response = await axios.post("/", bodyData);
+
+    // Si la respuesta es 2xx, obtenemos el resultado
+    const result = response.data;
+    
+    // Supongamos que el backend retorna { predicted_label, confidence }
+    if (result.predicted_label) {
+      recognizedWords.value.push(result.predicted_label);
     }
 
-    const result = await response.json()
-    // Supongamos que el backend retorna "predicted_label" y "confidence"
-    if (result.predicted_label) {
-      // Agregar la palabra detectada al arreglo de palabras
-      recognizedWords.value.push(result.predicted_label)
-    }
   } catch (error) {
-    console.error('Error al enviar datos para evaluación:', error)
-    alert('Ocurrió un error al enviar los datos para evaluación.')
+    console.error("Error al enviar datos para evaluación:", error);
+    alert("Ocurrió un error al enviar los datos para evaluación.");
   }
 }
-
 /**
  * Detener la grabación con la callback anterior.
  */
