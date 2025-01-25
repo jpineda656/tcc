@@ -1,5 +1,5 @@
 // src/services/apiRoles.js
-import axios from "axios";
+import axios from "@/services/api"; // <-- la instancia con interceptores
 
 export async function getAllRoles() {
   try {

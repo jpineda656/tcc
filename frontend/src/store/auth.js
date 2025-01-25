@@ -28,7 +28,7 @@ export const useAuthStore = defineStore("auth", {
         localStorage.setItem("token", access_token);
         localStorage.setItem("username", username);
 
-        axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+        // axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
       } catch (error) {
         throw error;
       }

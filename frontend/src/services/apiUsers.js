@@ -1,5 +1,5 @@
 // src/services/apiUsers.js
-import axios from "axios";
+import axios from "@/services/api"; // <-- la instancia con interceptores
 
 export async function getAllUsers() {
   try {
