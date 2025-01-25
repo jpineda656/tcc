@@ -17,6 +17,8 @@ export function useRecording() {
   const countdown = ref(0)
   const capturedFrames = ref([])
 
+  const capturedGesturesCount = ref(0);
+
   // Conteo regresivo
   let countdownInterval = null
 
@@ -103,6 +105,10 @@ export function useRecording() {
 
     console.log('Enviando:', bodyData)
     // console.log(JSON.stringify(bodyData));
+
+    if (capturedFrames.value.length > 0) {
+      capturedGesturesCount.value += 1; 
+    }
 
     // Llamamos a la callback
     if (typeof sendDataCallback === 'function') {
@@ -213,6 +219,7 @@ export function useRecording() {
     isPreparing,
     countdown,
     capturedFrames,
+    capturedGesturesCount,
 
     // Métodos:
     prepareRecording,
