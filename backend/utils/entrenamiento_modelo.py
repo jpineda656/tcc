@@ -3,6 +3,9 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 from sklearn.model_selection import train_test_split
+from app.db.coneccion import SessionLocal
+from datetime import datetime
+from app.models.meta_entrenamiento_model import MetadatosEntrenamiento
 import logging
 
 # Uso de logger centralizado
@@ -97,12 +100,13 @@ def train_model(model, X_train, y_train, X_val, y_val, batch_size=32, epochs=50,
 
 # ------------------ ENTRENAMIENTO COMPLETO ------------------
 
-def train_gesture_recognition_model(dataset_dir="dataset", model_dir="models", 
+def train_gesture_recognition_model(meta_entrenamiento_id:int, dataset_dir="dataset", model_dir="models", 
                                     test_size=0.2, validation_size=0.1, 
                                     batch_size=32, epochs=50):
     """
     Proceso completo de entrenamiento del modelo: carga, división, entrenamiento.
     """
+    db = SessionLocal()
     try:
         X, y, label_map = load_dataset(dataset_dir)
         X_train, X_val, X_test, y_train, y_val, y_test = split_dataset(X, y, test_size, validation_size)
@@ -116,12 +120,28 @@ def train_gesture_recognition_model(dataset_dir="dataset", model_dir="models",
         test_loss, test_accuracy = model.evaluate(X_test, y_test)
         logger.info(f"Evaluación en conjunto de prueba: pérdida = {test_loss:.4f}, precisión = {test_accuracy:.4f}")
 
+        meta_entrenamiento = db.query(MetadatosEntrenamiento).filter_by(id=meta_entrenamiento_id).first()
+        if meta_entrenamiento:
+            meta_entrenamiento.status = "completed"
+            meta_entrenamiento.finished_at = datetime.utcnow()
+            # Registrar métricas si gustas
+            meta_entrenamiento.accuracy = f"{test_accuracy:.2f}"
+            meta_entrenamiento.loss = f"{test_loss:.2f}"
+            db.commit()
+            
         return {
             "message": "Entrenamiento completado exitosamente.",
             "model_path": model_path,
             "test_accuracy": test_accuracy,
             "label_map": label_map
         }
+        
     except Exception as e:
         logger.error(f"Error en el entrenamiento del modelo: {e}")
+        meta_entrenamiento = db.query(MetadatosEntrenamiento).filter_by(id=meta_entrenamiento_id).first()
+        if meta_entrenamiento:
+            meta_entrenamiento.status = "failed"
+            db.commit()
         raise
+    finally:
+        db.close()

@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from app.db.coneccion import get_db
-from app.models.metadatos_captura_model import MetadatosCaptura
+from app.models.meta_captura_model import MetadatosCaptura
 from app.schemas.captura_schema import CaptureRequest
 from app.core.rol_auth import require_role
 from app.models.usuario_model import User

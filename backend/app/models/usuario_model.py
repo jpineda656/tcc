@@ -25,5 +25,10 @@ class User(Base):
         back_populates="user", 
         cascade="all, delete-orphan")
 
+    meta_entrenamiento = relationship(
+        "MetadatosEntrenamiento",
+        back_populates="user", 
+        cascade="all, delete-orphan")
+    
     def __repr__(self):
         return f"<User(nombre='{self.nombre}', correo='{self.correo}')>"

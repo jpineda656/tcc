@@ -15,8 +15,8 @@ router = APIRouter(
 )
 
 # Directorios de entrada, salida y almacenamiento
-INPUT_DIR = "data/captures"
-OUTPUT_DIR = "data/processed"
+INPUT_DIR = "data/capturas"
+OUTPUT_DIR = "data/procesados"
 DATASET_DIR = "dataset"
 
 @router.post("/", summary = "Ejecuta la normalización de los puntos de referencia")
