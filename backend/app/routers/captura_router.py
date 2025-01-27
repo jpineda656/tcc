@@ -10,7 +10,7 @@ from app.db.coneccion import get_db
 from app.models.meta_captura_model import MetadatosCaptura
 from app.schemas.captura_schema import CaptureRequest
 from app.core.rol_auth import require_role
-from app.models.usuario_model import User
+from app.models.usuario_model import Usuario
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ os.makedirs(DATA_DIR, exist_ok=True)  # Crear directorio si no existe
 async def capture_data(
     data: CaptureRequest, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role("admin"))
+    current_user: Usuario = Depends(require_role("admin"))
     ):
     """
     Recibe datos de referencia para una palabra en lenguaje de señas y los guarda en un archivo JSON.
@@ -48,11 +48,11 @@ async def capture_data(
 
         logger.info(f"Datos capturados y guardados en {file_path}")
         # Guarda metadatos
-        frames_count = len(data.framesData)
+        cant_fotogramas = len(data.framesData)
         nuevos_metadatos = MetadatosCaptura(
-            user_id=current_user.id,
-            label=data.label,
-            frames_count=frames_count
+            usuario_id=current_user.id,
+            palabra=data.label,
+            cant_fotogramas=cant_fotogramas
         )
         db.add(nuevos_metadatos)
         db.commit()

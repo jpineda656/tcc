@@ -5,7 +5,7 @@ from app.services.rol_service import create_role, get_role_by_name
 from app.services.usuario_service import create_user, assign_role_to_user
 from app.schemas.rol_schema import RoleCreate
 from app.schemas.usuario_schema import UserCreate
-from app.models.usuario_model import User
+from app.models.usuario_model import Usuario
 
 def initialize_data():
     """
@@ -17,12 +17,12 @@ def initialize_data():
         # 1. Crear el rol 'admin' si no existe
         admin_role = get_role_by_name(db, "admin")
         if not admin_role:
-            role_data = RoleCreate(name="admin")
+            role_data = RoleCreate(nombre_rol="admin")
             admin_role = create_role(db, role_data)  # Crea el rol 'admin'
 
         # 2. Crear el usuario admin si no existe
         admin_email = "admin@example.com"
-        existing_admin_user = db.query(User).filter(User.correo == admin_email).first()
+        existing_admin_user = db.query(Usuario).filter(Usuario.correo == admin_email).first()
         if not existing_admin_user:
             user_data = UserCreate(
                 nombre="Admin",

@@ -1,23 +1,23 @@
 import logging
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from app.models.usuario_model import User
+from app.models.usuario_model import Usuario
 from app.schemas.usuario_schema import UserCreate, UserUpdate
 from app.services.auth_service import get_password_hash
 from app.services.rol_service import get_role_by_name
 
 logger = logging.getLogger(__name__)
 
-def create_user(db: Session, user_data: UserCreate) -> User:
+def create_user(db: Session, user_data: UserCreate) -> Usuario:
     logger.info(f"Creando usuario con correo: {user_data.correo}")
-    if db.query(User).filter(User.correo == user_data.correo).first():
+    if db.query(Usuario).filter(Usuario.correo == user_data.correo).first():
         logger.warning(f"Intento de registro duplicado para correo: {user_data.correo}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="El correo ya está registrado."
         )
     hashed_password = get_password_hash(user_data.password)
-    new_user = User(
+    new_user = Usuario(
         nombre=user_data.nombre,
         apellido=user_data.apellido,
         correo=user_data.correo,
@@ -29,92 +29,92 @@ def create_user(db: Session, user_data: UserCreate) -> User:
     logger.info(f"Usuario creado exitosamente: ID {new_user.id}")
     return new_user
 
-def get_all_users(db: Session) -> list[User]:
-    users = db.query(User).all()
-    logger.info(f"Recuperados {len(users)} usuarios de la base de datos.")
-    return users
+def get_all_users(db: Session) -> list[Usuario]:
+    usuarios = db.query(Usuario).all()
+    logger.info(f"Recuperados {len(usuarios)} usuarios de la base de datos.")
+    return usuarios
 
-def update_user(db: Session, user_id: int, user_update: UserUpdate) -> User:
-    logger.info(f"Actualizando usuario ID: {user_id}")
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        logger.warning(f"Usuario no encontrado: ID {user_id}")
+def update_user(db: Session, usuario_id: int, user_update: UserUpdate) -> Usuario:
+    logger.info(f"Actualizando usuario ID: {usuario_id}")
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not usuario:
+        logger.warning(f"Usuario no encontrado: ID {usuario_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Usuario no encontrado."
         )
     for field, value in user_update.dict(exclude_unset=True).items():
-        setattr(user, field, value)
+        setattr(usuario, field, value)
     db.commit()
-    db.refresh(user)
-    logger.info(f"Usuario actualizado: ID {user_id}")
-    return user
+    db.refresh(usuario)
+    logger.info(f"Usuario actualizado: ID {usuario_id}")
+    return usuario
 
-def delete_user(db: Session, user_id: int) -> None:
-    logger.info(f"Eliminando usuario ID: {user_id}")
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        logger.warning(f"Usuario no encontrado para eliminar: ID {user_id}")
+def delete_user(db: Session, usuario_id: int) -> None:
+    logger.info(f"Eliminando usuario ID: {usuario_id}")
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not usuario:
+        logger.warning(f"Usuario no encontrado para eliminar: ID {usuario_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Usuario no encontrado."
         )
-    db.delete(user)
+    db.delete(usuario)
     db.commit()
-    logger.info(f"Usuario eliminado: ID {user_id}")
+    logger.info(f"Usuario eliminado: ID {usuario_id}")
 
-def assign_role_to_user(db: Session, user_id: int, role_name: str) -> User:
-    logger.info(f"Asignando rol '{role_name}' al usuario ID {user_id}")
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        logger.warning(f"Usuario no encontrado: ID {user_id}")
+def assign_role_to_user(db: Session, usuario_id: int, nombre_rol: str) -> Usuario:
+    logger.info(f"Asignando rol '{nombre_rol}' al usuario ID {usuario_id}")
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not usuario:
+        logger.warning(f"Usuario no encontrado: ID {usuario_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Usuario no encontrado."
         )
 
-    role = get_role_by_name(db, role_name)
-    if not role:
-        logger.warning(f"Rol no encontrado: {role_name}")
+    rol = get_role_by_name(db, nombre_rol)
+    if not rol:
+        logger.warning(f"Rol no encontrado: {nombre_rol}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"El rol '{role_name}' no existe."
+            detail=f"El rol '{nombre_rol}' no existe."
         )
 
-    if role not in user.roles:
-        user.roles.append(role)
+    if rol not in usuario.roles:
+        usuario.roles.append(rol)
         db.commit()
-        db.refresh(user)
-        logger.info(f"Rol '{role_name}' asignado al usuario ID {user_id}")
+        db.refresh(usuario)
+        logger.info(f"Rol '{nombre_rol}' asignado al usuario ID {usuario_id}")
     else:
-        logger.info(f"El usuario ID {user_id} ya tiene el rol '{role_name}'")
+        logger.info(f"El usuario ID {usuario_id} ya tiene el rol '{nombre_rol}'")
 
-    return user
+    return usuario
 
-def remove_role_from_user(db: Session, user_id: int, role_name: str) -> User:
-    logger.info(f"Removiendo rol '{role_name}' del usuario ID {user_id}")
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        logger.warning(f"Usuario no encontrado: ID {user_id}")
+def remove_role_from_user(db: Session, usuario_id: int, nombre_rol: str) -> Usuario:
+    logger.info(f"Removiendo rol '{nombre_rol}' del usuario ID {usuario_id}")
+    usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not usuario:
+        logger.warning(f"Usuario no encontrado: ID {usuario_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Usuario no encontrado."
         )
 
-    role = get_role_by_name(db, role_name)
-    if not role:
-        logger.warning(f"Rol no encontrado: {role_name}")
+    rol = get_role_by_name(db, nombre_rol)
+    if not rol:
+        logger.warning(f"Rol no encontrado: {nombre_rol}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"El rol '{role_name}' no existe."
+            detail=f"El rol '{nombre_rol}' no existe."
         )
 
-    if role in user.roles:
-        user.roles.remove(role)
+    if rol in usuario.roles:
+        usuario.roles.remove(rol)
         db.commit()
-        db.refresh(user)
-        logger.info(f"Rol '{role_name}' removido del usuario ID {user_id}")
+        db.refresh(usuario)
+        logger.info(f"Rol '{nombre_rol}' removido del usuario ID {usuario_id}")
     else:
-        logger.info(f"El usuario ID {user_id} no posee el rol '{role_name}'")
+        logger.info(f"El usuario ID {usuario_id} no posee el rol '{nombre_rol}'")
 
-    return user
+    return usuario

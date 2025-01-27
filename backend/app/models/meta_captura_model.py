@@ -12,14 +12,14 @@ class MetadatosCaptura(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     
-    label = Column(String(100), nullable=False)
-    frames_count = Column(Integer, nullable=False, default=0)
+    palabra = Column(String(100), nullable=False)
+    cant_fotogramas = Column(Integer, nullable=False, default=0)
     
     
     # Fecha/hora en que se generó la captura
-    created_at = Column(DateTime, default=datetime.utcnow)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
 
     # Relación con el usuario
-    user = relationship("User", back_populates="metadatos_captura")
+    usuario = relationship("Usuario", back_populates="metadatos_captura")

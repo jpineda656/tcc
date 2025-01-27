@@ -1,57 +1,57 @@
 import logging
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from app.models.rol_model import Role
+from app.models.rol_model import Rol
 from app.schemas.rol_schema import RoleCreate, RoleUpdate
 
 logger = logging.getLogger(__name__)
 
-def create_role(db: Session, role_data: RoleCreate) -> Role:
-    if db.query(Role).filter(Role.name == role_data.name).first():
-        logger.warning(f"Intento de crear rol existente: {role_data.name}")
+def create_role(db: Session, role_data: RoleCreate) -> Rol:
+    if db.query(Rol).filter(Rol.nombre_rol == role_data.nombre_rol).first():
+        logger.warning(f"Intento de crear rol existente: {role_data.nombre_rol}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="El rol ya existe."
         )
-    new_role = Role(name=role_data.name)
+    new_role = Rol(nombre_rol=role_data.nombre_rol)
     db.add(new_role)
     db.commit()
     db.refresh(new_role)
-    logger.info(f"Rol creado exitosamente: {new_role.name}")
+    logger.info(f"Rol creado exitosamente: {new_role.nombre_rol}")
     return new_role
 
-def update_role(db: Session, role_id: int, role_update: RoleUpdate) -> Role:
-    logger.info(f"Actualizando rol ID: {role_id}")
-    role = db.query(Role).filter(Role.id == role_id).first()
-    if not role:
-        logger.warning(f"Rol no encontrado: ID {role_id}")
+def update_role(db: Session, rol_id: int, role_update: RoleUpdate) -> Rol:
+    logger.info(f"Actualizando rol ID: {rol_id}")
+    rol = db.query(Rol).filter(Rol.id == rol_id).first()
+    if not rol:
+        logger.warning(f"Rol no encontrado: ID {rol_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Rol no encontrado."
         )
     for field, value in role_update.dict(exclude_unset=True).items():
-        setattr(role, field, value)
+        setattr(rol, field, value)
     db.commit()
-    db.refresh(role)
-    logger.info(f"Rol actualizado: ID {role_id}")
-    return role
+    db.refresh(rol)
+    logger.info(f"Rol actualizado: ID {rol_id}")
+    return rol
 
-def get_all_roles(db: Session) -> list[Role]:
-    roles = db.query(Role).all()
+def get_all_roles(db: Session) -> list[Rol]:
+    roles = db.query(Rol).all()
     logger.info(f"Se recuperaron {len(roles)} roles de la base de datos.")
     return roles
 
-def delete_role(db: Session, role_id: int) -> None:
-    role = db.query(Role).filter(Role.id == role_id).first()
-    if not role:
-        logger.warning(f"Rol con ID {role_id} no encontrado para eliminación.")
+def delete_role(db: Session, rol_id: int) -> None:
+    rol = db.query(Rol).filter(Rol.id == rol_id).first()
+    if not rol:
+        logger.warning(f"Rol con ID {rol_id} no encontrado para eliminación.")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Rol no encontrado."
         )
-    db.delete(role)
+    db.delete(rol)
     db.commit()
-    logger.info(f"Rol con ID {role_id} eliminado exitosamente.")
+    logger.info(f"Rol con ID {rol_id} eliminado exitosamente.")
 
-def get_role_by_name(db: Session, role_name: str) -> Role | None:
-    return db.query(Role).filter(Role.name == role_name).first()
+def get_role_by_name(db: Session, nombre_rol: str) -> Rol | None:
+    return db.query(Rol).filter(Rol.nombre_rol == nombre_rol).first()

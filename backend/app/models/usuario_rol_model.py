@@ -1,9 +1,9 @@
 from sqlalchemy import Table, Column, Integer, ForeignKey
 from app.models.clase_base import Base
 
-user_roles = Table(
-    "user_roles",
+usuario_roles = Table(
+    "usuario_roles",
     Base.metadata,
-    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
-    Column("role_id", Integer, ForeignKey("roles.id"), primary_key=True),
+    Column("usuario_id", Integer, ForeignKey("usuarios.id"), primary_key=True),
+    Column("rol_id", Integer, ForeignKey("roles.id"), primary_key=True),
 )

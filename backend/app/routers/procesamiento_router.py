@@ -3,7 +3,7 @@ import os
 import logging
 from utils.procesamiento import preprocess_all_files
 from app.core.rol_auth import require_role
-from app.models.usuario_model import User
+from app.models.usuario_model import Usuario
 
 
 
@@ -22,7 +22,7 @@ DATASET_DIR = "dataset"
 @router.post("/", summary = "Ejecuta la normalización de los puntos de referencia")
 async def trigger_preprocessing(
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(require_role("admin"))
+    current_user: Usuario = Depends(require_role("admin"))
     ):
     """
     Endpoint para activar el preprocesamiento en segundo plano.
