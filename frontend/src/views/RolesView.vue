@@ -9,7 +9,7 @@
       <section class="create-section">
         <h3>Crear Nuevo Rol</h3>
         <form @submit.prevent="handleCreateRole">
-          <input v-model="newRoleData.name" placeholder="Nombre del Rol" />
+          <input v-model="newRoleData.nombre_rol" placeholder="Nombre del Rol" />
           <button type="submit">Crear Rol</button>
         </form>
         <p v-if="errorCreate" class="error">{{ errorCreate }}</p>
@@ -28,12 +28,12 @@
         <ul class="roles-list" v-if="!isLoadingRoles && roles.length > 0">
           <li v-for="role in roles" :key="role.id">
             <div v-if="editRoleId === role.id" class="edit-form">
-              <input v-model="editData.name" placeholder="Nombre del Rol" />
+              <input v-model="editData.nombre_rol" placeholder="Nombre del Rol" />
               <button @click="handleUpdateRole(role.id)">Guardar</button>
               <button @click="cancelEdit">Cancelar</button>
             </div>
             <div v-else class="role-item">
-              <span class="role-info">{{ role.name }}</span>
+              <span class="role-info">{{ role.nombre_rol }}</span>
               <div class="role-actions">
                 <button @click="startEdit(role)">Editar</button>
                 <button @click="handleDeleteRole(role.id)">Eliminar</button>
@@ -57,9 +57,9 @@ import { ref } from "vue";
 import { getAllRoles, createRole, updateRole, deleteRole } from "@/services/apiRoles";
 
 const roles = ref([]);
-const newRoleData = ref({ name: "" });
+const newRoleData = ref({ nombre_rol: "" });
 const editRoleId = ref(null);
-const editData = ref({ name: "" });
+const editData = ref({ nombre_rol: "" });
 
 const errorCreate = ref("");
 const errorLoad = ref("");
@@ -81,7 +81,7 @@ async function handleCreateRole() {
   try {
     await createRole(newRoleData.value);
     loadRoles();
-    newRoleData.value = { name: "" };
+    newRoleData.value = { nombre_rol: "" };
   } catch (error) {
     errorCreate.value = "Error al crear rol.";
   }
