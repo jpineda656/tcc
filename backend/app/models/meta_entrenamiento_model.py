@@ -27,3 +27,6 @@ class MetadatosEntrenamiento(Base):
 
     # Relación con el usuario
     usuario = relationship("Usuario", back_populates="meta_entrenamiento")
+    
+    def __repr__(self):
+        return f"<meta_entrenamiento id={self.id} usuario_id={self.usuario_id} status={self.estado}>"

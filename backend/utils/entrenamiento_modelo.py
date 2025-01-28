@@ -120,13 +120,14 @@ def train_gesture_recognition_model(meta_entrenamiento_id:int, dataset_dir="data
         test_loss, test_accuracy = model.evaluate(X_test, y_test)
         logger.info(f"Evaluación en conjunto de prueba: pérdida = {test_loss:.4f}, precisión = {test_accuracy:.4f}")
 
-        meta_entrenamiento = db.query(MetadatosEntrenamiento).filter_by(id=meta_entrenamiento_id).first()
-        if meta_entrenamiento:
-            meta_entrenamiento.status = "completed"
-            meta_entrenamiento.finished_at = datetime.utcnow()
+
+        meta = db.query(MetadatosEntrenamiento).filter_by(id=meta_entrenamiento_id).first()
+        if meta:
+            meta.status = "completed"
+            meta.finished_at = datetime.utcnow()
             # Registrar métricas si gustas
-            meta_entrenamiento.accuracy = f"{test_accuracy:.2f}"
-            meta_entrenamiento.loss = f"{test_loss:.2f}"
+            meta.accuracy = f"{test_accuracy:.2f}"
+            meta.loss = f"{test_loss:.2f}"
             db.commit()
             
         return {
@@ -135,13 +136,13 @@ def train_gesture_recognition_model(meta_entrenamiento_id:int, dataset_dir="data
             "test_accuracy": test_accuracy,
             "label_map": label_map
         }
-        
+            
     except Exception as e:
         logger.error(f"Error en el entrenamiento del modelo: {e}")
-        meta_entrenamiento = db.query(MetadatosEntrenamiento).filter_by(id=meta_entrenamiento_id).first()
-        if meta_entrenamiento:
-            meta_entrenamiento.status = "failed"
-            db.commit()
+        meta = db.query(MetadatosEntrenamiento).filter_by(id=meta_entrenamiento_id).first()
+        if meta:
+            meta.status = "failed"
+            db.commit() 
         raise
     finally:
         db.close()

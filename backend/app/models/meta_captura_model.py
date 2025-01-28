@@ -23,3 +23,8 @@ class MetadatosCaptura(Base):
 
     # Relación con el usuario
     usuario = relationship("Usuario", back_populates="metadatos_captura")
+    
+    def __repr__(self):
+        return f"<CaptureLog id={self.id} palabra={self.palabra} usuario_id={self.usuario_id}>" 
+
+

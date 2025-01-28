@@ -13,7 +13,8 @@ from app.routers import (
     rol_router,
     captura_router,
     entrenamiento_router,
-    evaluacion_router
+    evaluacion_router,
+    dashboard_router
 )
 
 # Configuración centralizada de logging
@@ -74,7 +75,8 @@ routers = [
     captura_router.router,
     procesamiento_router.router,
     entrenamiento_router.router,
-    evaluacion_router.router
+    evaluacion_router.router,
+    dashboard_router.router,
 ]
 for r in routers:
     app.include_router(r)

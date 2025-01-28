@@ -1,294 +1,401 @@
+<!-- src/views/DashboardView.vue -->
 <template>
   <div>
-    <!-- Navbar -->
     <TheNavbar />
 
-    <!-- Contenedor principal -->
     <div class="dashboard-container">
-      <h2 class="title">Panel de Control</h2>
+      <h2 class="dashboard-title">Panel de Control</h2>
 
-      <!-- Sección de Bienvenida o Info de Usuario -->
-      <div class="user-greeting">
-        <h3>Hola, {{ username }}!</h3>
-        <p>Bienvenido a tu panel de estadísticas.</p>
-      </div>
-
-      <!-- Sección de Estadísticas Resumidas -->
-      <div class="stats-summary">
-        <div class="stats-card" @click="goToCaptures">
-          <h4>Capturas Realizadas</h4>
-          <p>{{ capturesCount }}</p>
+      <!-- Sección de Resumen (estadísticas) -->
+      <section class="summary-section">
+        <!-- Tarjeta de capturas -->
+        <div class="summary-card">
+          <h3>Capturas</h3>
+          <p class="summary-count">{{ summaryData.capture_count }}</p>
+          <p>Capturas registradas en total</p>
         </div>
-        <div class="stats-card" @click="goToTrainings">
-          <h4>Entrenamientos</h4>
-          <p>{{ trainingsCount }}</p>
-        </div>
-      </div>
 
-      <!-- Sección de Detalle de Capturas y Entrenamientos -->
-      <div class="detailed-section">
-        <!-- Detalle de Capturas -->
-        <div class="detail-card">
+        <!-- Tarjeta de entrenamientos -->
+        <div class="summary-card">
+          <h3>Entrenamientos</h3>
+          <p class="summary-count">{{ summaryData.training_count }}</p>
+          <p>Entrenamientos realizados</p>
+        </div>
+      </section>
+
+      <!-- Sección de Capturas -->
+      <section class="list-section">
+        <div class="section-header">
           <h3>Historial de Capturas</h3>
-          <table class="detail-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Palabra</th>
-                <th>Frames</th>
-                <th>Fecha</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="capture in captureLogs" :key="capture.id">
-                <td>{{ capture.id }}</td>
-                <td>{{ capture.label }}</td>
-                <td>{{ capture.frames_count }}</td>
-                <td>{{ formatDate(capture.created_at) }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="pagination-controls">
+            <button
+              :disabled="pageCaptures <= 1"
+              @click="pageCaptures--"
+            >
+              Prev
+            </button>
+            <span>Página {{ pageCaptures }}</span>
+            <button
+              :disabled="capturesList.length < limitCaptures"
+              @click="pageCaptures++"
+            >
+              Next
+            </button>
+          </div>
         </div>
 
-        <!-- Detalle de Entrenamientos -->
-        <div class="detail-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Palabra</th>
+              <th>Fotogramas</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="capture in capturesList" :key="capture.id">
+              <td>{{ capture.id }}</td>
+              <td>{{ capture.label }}</td>
+              <td>{{ capture.frames_count }}</td>
+              <td>{{ formatDate(capture.created_at) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Sección de Entrenamientos -->
+      <section class="list-section">
+        <div class="section-header">
           <h3>Historial de Entrenamientos</h3>
-          <table class="detail-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Estado</th>
-                <th>Fecha Inicio</th>
-                <th>Fecha Fin</th>
-                <th>Accuracy</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="training in trainingLogs" :key="training.id">
-                <td>{{ training.id }}</td>
-                <td>
-                  <span
-                    class="status-pill"
-                    :class="{
-                      'completed': training.status === 'completed',
-                      'failed': training.status === 'failed',
-                      'started': training.status === 'started'
-                    }"
-                  >
-                    {{ training.status }}
-                  </span>
-                </td>
-                <td>{{ formatDate(training.started_at) }}</td>
-                <td>{{ formatDate(training.finished_at) }}</td>
-                <td>{{ training.accuracy }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="pagination-controls">
+            <button
+              :disabled="pageTrainings <= 1"
+              @click="pageTrainings--"
+            >
+              Prev
+            </button>
+            <span>Página {{ pageTrainings }}</span>
+            <button
+              :disabled="trainingsList.length < limitTrainings"
+              @click="pageTrainings++"
+            >
+              Next
+            </button>
+          </div>
         </div>
-      </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Estado</th>
+              <th>Hora Inicio</th>
+              <th>Hora Fin</th>
+              <th>Exactitud</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="training in trainingsList" :key="training.id">
+              <td>{{ training.id }}</td>
+              <td>{{ training.status }}</td>
+              <td>{{ formatDate(training.started_at) }}</td>
+              <td>{{ formatDate(training.finished_at) }}</td>
+              <td>{{ training.accuracy || 'N/A' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Sección de Usuarios (Opcional) -->
+      <section class="list-section">
+        <div class="section-header">
+          <h3>Listado de Usuarios (Opcional)</h3>
+          <div class="pagination-controls">
+            <button
+              :disabled="pageUsers <= 1"
+              @click="pageUsers--"
+            >
+              Prev
+            </button>
+            <span>Página {{ pageUsers }}</span>
+            <button
+              :disabled="usersList.length < limitUsers"
+              @click="pageUsers++"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Correo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="usr in usersList" :key="usr.id">
+              <td>{{ usr.id }}</td>
+              <td>{{ usr.nombre }} {{ usr.apellido }}</td>
+              <td>{{ usr.correo }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import { useAuthStore } from "@/store/auth";
-import { storeToRefs } from "pinia";
-
-// Importa tu Navbar
+import { ref, onMounted, watch } from "vue";
 import TheNavbar from "@/components/TheNavbar.vue";
-
-// Importa tu instancia de Axios (con interceptores)
 import axios from "@/services/api";
 
-const authStore = useAuthStore();
-const { username } = storeToRefs(authStore);
-
-// Estados para estadísticas resumidas
-const capturesCount = ref(0);
-const trainingsCount = ref(0);
-
-// Arrays para detalle
-const captureLogs = ref([]);
-const trainingLogs = ref([]);
-
-/**
- * Función para formatear fecha/hora
- */
-function formatDate(dateString) {
-  if (!dateString) return "-";
-  const date = new Date(dateString);
-  return date.toLocaleString(); // Ajusta según tu preferencia
-}
-
-/**
- * Cargar datos del dashboard al montar
- */
-onMounted(async () => {
-  try {
-    // 1) Carga stats resumidas
-    // Suponiendo que tienes un endpoint /dashboard_data
-    const resStats = await axios.get("/dashboard_data");
-    capturesCount.value = resStats.data.capture_count || 0;
-    trainingsCount.value = resStats.data.training_count || 0;
-
-    // 2) Cargar logs de capturas
-    // Suponiendo que tienes un endpoint /captures/logs
-    const resCaptures = await axios.get("/captures/logs");
-    captureLogs.value = resCaptures.data || [];
-
-    // 3) Cargar logs de entrenamientos
-    // Suponiendo que tienes un endpoint /trainings/logs
-    const resTrainings = await axios.get("/trainings/logs");
-    trainingLogs.value = resTrainings.data || [];
-  } catch (error) {
-    console.error("Error al cargar datos del Dashboard:", error);
-    // Podrías mostrar un mensaje de error en pantalla
-  }
+// Datos resumen
+const summaryData = ref({
+  capture_count: 0,
+  training_count: 0,
 });
 
-/**
- * Funciones para navegar a detalles, si deseas
- */
-function goToCaptures() {
-  // Router push a la vista de Capturas
-  // e.g. this.$router.push("/captures")
+// Capturas
+const capturesList = ref([]);
+const pageCaptures = ref(1);
+const limitCaptures = ref(5); // Muestra 5 capturas por página
+
+// Entrenamientos
+const trainingsList = ref([]);
+const pageTrainings = ref(1);
+const limitTrainings = ref(5);
+
+// Usuarios (opcional)
+const usersList = ref([]);
+const pageUsers = ref(1);
+const limitUsers = ref(5);
+
+// ------------------------------
+// Función para formatear fecha
+// ------------------------------
+function formatDate(dateStr) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  return d.toLocaleString(); 
 }
 
-function goToTrainings() {
-  // Router push a la vista de Entrenamientos
-  // e.g. this.$router.push("/process")
+// ------------------------------
+// Cargar datos de resumen
+// ------------------------------
+async function fetchDashboardSummary() {
+  try {
+    const resp = await axios.get("/dashboard/data");
+    summaryData.value = resp.data;
+  } catch (error) {
+    console.error("Error al cargar datos de resumen:", error);
+  }
 }
+
+// ------------------------------
+// Cargar capturas (con paginación)
+// ------------------------------
+async function fetchCaptures() {
+  try {
+    const resp = await axios.get("/dashboard/captures", {
+      params: {
+        page: pageCaptures.value,
+        limit: limitCaptures.value
+      }
+    });
+    capturesList.value = resp.data;
+  } catch (error) {
+    console.error("Error al cargar capturas:", error);
+  }
+}
+
+// ------------------------------
+// Cargar entrenamientos (con paginación)
+// ------------------------------
+async function fetchTrainings() {
+  try {
+    const resp = await axios.get("/dashboard/trainings", {
+      params: {
+        page: pageTrainings.value,
+        limit: limitTrainings.value
+      }
+    });
+    trainingsList.value = resp.data;
+  } catch (error) {
+    console.error("Error al cargar entrenamientos:", error);
+  }
+}
+
+// ------------------------------
+// Cargar usuarios (opcional)
+// ------------------------------
+async function fetchUsers() {
+  try {
+    // Ajusta al endpoint real
+    // e.g. GET /users?page=X&limit=Y
+    const resp = await axios.get("/users", {
+      params: {
+        page: pageUsers.value,
+        limit: limitUsers.value
+      }
+    });
+    usersList.value = resp.data; 
+  } catch (error) {
+    console.error("Error al cargar usuarios:", error);
+  }
+}
+
+// Llamar las funciones en onMounted
+onMounted(async () => {
+  await fetchDashboardSummary();
+  await fetchCaptures();
+  await fetchTrainings();
+  await fetchUsers(); // si lo usas
+});
+
+// Reaccionar a cambios de página: vuelve a cargar
+watch([pageCaptures, limitCaptures], fetchCaptures);
+watch([pageTrainings, limitTrainings], fetchTrainings);
+watch([pageUsers, limitUsers], fetchUsers);
+
 </script>
 
 <style scoped>
+/* Ajusta los colores según tu paleta global:
+   :root {
+     --dark-gray: #37474f;
+     --medium-gray: #546e7a;
+     --light-gray: #cfd8dc;
+     --primary-color: #2c3e50;
+     --accent-color: #1abc9c;
+     --danger-color: #e74c3c;
+     --text-color: #eceff1;
+     --white: #ffffff;
+   }
+*/
 
 .dashboard-container {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 2rem auto;
-  padding: 1rem;
   background-color: var(--dark-gray);
-  color: var(--text-color);
+  padding: 1rem 2rem;
   border-radius: 8px;
+  color: var(--text-color);
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-.title {
+.dashboard-title {
   text-align: center;
   font-size: 1.8rem;
   margin-bottom: 1rem;
-  color: var(--white);
 }
 
-/* Sección de bienvenida */
-.user-greeting {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-/* Resumen de estadísticas */
-.stats-summary {
+/* Sección de tarjetas de resumen */
+.summary-section {
   display: flex;
   gap: 1rem;
   justify-content: center;
   margin-bottom: 2rem;
 }
 
-.stats-card {
-  flex: 1;
+.summary-card {
   background-color: var(--medium-gray);
-  padding: 1rem;
   border-radius: 8px;
+  padding: 1rem;
+  width: 200px;
   text-align: center;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: transform 0.2s ease, background-color 0.2s ease;
 }
-
-.stats-card:hover {
+.summary-card:hover {
+  transform: translateY(-3px);
   background-color: var(--accent-color);
 }
 
-.stats-card h4 {
+.summary-card h3 {
   margin: 0;
   font-size: 1.2rem;
+  margin-bottom: 0.5rem;
   color: var(--white);
 }
-
-.stats-card p {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-top: 0.5rem;
+.summary-count {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--white);
+  margin: 0.5rem 0;
 }
 
-/* Sección de tablas detalladas */
-.detailed-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-/* Tarjeta individual para capturas o entrenamientos */
-.detail-card {
-  flex: 1;
-  min-width: 300px;
+/* Secciones de tablas */
+.list-section {
+  margin-bottom: 2rem;
   background-color: var(--medium-gray);
   padding: 1rem;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
-/* Títulos dentro de la tarjeta */
-.detail-card h3 {
-  margin: 0 0 1rem;
-  font-size: 1.3rem;
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.section-header h3 {
+  font-size: 1.2rem;
   color: var(--white);
-  text-align: center;
+  margin: 0;
+}
+
+/* Paginación */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.pagination-controls button {
+  background-color: var(--primary-color);
+  color: var(--white);
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.pagination-controls button:hover {
+  background-color: var(--accent-color);
+}
+.pagination-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Tablas */
-.detail-table {
+.data-table {
   width: 100%;
   border-collapse: collapse;
-}
-
-.detail-table thead {
   background-color: var(--dark-gray);
-}
-
-.detail-table th,
-.detail-table td {
-  padding: 0.5rem;
-  text-align: left;
-  border-bottom: 1px solid var(--dark-gray);
-}
-
-.detail-table th {
-  font-weight: 600;
-  color: var(--white);
-}
-.detail-table td {
   color: var(--text-color);
 }
 
-/* Estilos para el status */
-.status-pill {
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  color: var(--white);
-  font-weight: 600;
-  font-size: 0.9rem;
-  text-transform: capitalize;
+.data-table thead {
+  background-color: var(--primary-color);
 }
-
-.status-pill.completed {
-  background-color: #2ecc71; /* Verde */
+.data-table thead th {
+  padding: 0.75rem;
+  text-align: left;
 }
-.status-pill.failed {
-  background-color: var(--danger-color);
+.data-table tbody tr {
+  transition: background-color 0.2s ease;
 }
-.status-pill.started {
-  background-color: var(--accent-color);
+.data-table tbody tr:hover {
+  background-color: rgba(255,255,255,0.1);
 }
-
+.data-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--medium-gray);
+}
 </style>
