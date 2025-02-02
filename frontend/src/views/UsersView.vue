@@ -1,4 +1,3 @@
-<!-- frontend/src/views/UsersView.vue -->
 <template>
   <TheNavbar />
 
@@ -63,70 +62,44 @@
     </section>
   </div>
 
-  <!-- Modal para asignar roles -->
-  <div class="roles-modal" v-if="showRolesModal">
-    <div class="roles-modal-content">
-      <h3>Gestionar Roles para {{ selectedUser.nombre }}</h3>
-      <p>ID de usuario: {{ selectedUser.id }}</p>
-
-      <!-- Listado de roles disponibles -->
-      <div class="available-roles">
-        <h4>Roles disponibles:</h4>
-        <ul>
-          <li v-for="role in rolesList" :key="role.nombre_rol">
-            <span>{{ role.nombre_rol }}</span>
-            <!-- Agregar / Quitar rol segun si el usuario lo tiene -->
-            <button v-if="!userHasRole(role.nombre_rol)" @click="assignRole(selectedUser.id, role.nombre_rol)">
-              Asignar
-            </button>
-            <button v-else @click="removeRole(selectedUser.id, role.nombre_rol)">
-              Remover
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Botón para cerrar modal -->
-      <button @click="closeRolesModal">Cerrar</button>
-    </div>
-  </div>
+  <!-- Modal para asignar roles (se pasa la prop "show") -->
+  <RolesModal
+    v-if="showRolesModal"
+    :selectedUser="selectedUser"
+    :show="showRolesModal"
+    @close="closeRolesModal"
+  />
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref } from "vue";  
+import RolesModal from "@/components/RolesModal.vue";
 import TheNavbar from "@/components/TheNavbar.vue";
-import { showConfirm, showSuccess, showError } from "@/utils/alertUtils"
+import { showConfirm, showSuccess, showError } from "@/utils/alertUtils";
 import {
   getAllUsers,
   createUser,
   updateUser,
-  deleteUser,
-  getAllRoles,
-  assignRoleToUser,
-  removeRoleFromUser
+  deleteUser
 } from "@/services/apiUsers";
 
 const users = ref([]);
 const newUserData = ref({ nombre: "", apellido: "", correo: "", password: "" });
 
-
 // Para editar usuario
 const editUserId = ref(null);
 const editData = ref({ nombre: "", apellido: "", correo: "", password: "" });
 
-// Errores
+// Errores y estado de carga
 const errorCreate = ref("");
 const errorLoad = ref("");
 const isLoadingUsers = ref(false);
 
-// Roles (para modal)
-const rolesList = ref([]);     // Lista global de roles
+// Estado para el modal de roles
 const showRolesModal = ref(false);
-const selectedUser = ref({});  // Usuario en edición de roles
+const selectedUser = ref({});
 
-////////////////////////////////////////////////////////////
-// Cargar usuarios
-////////////////////////////////////////////////////////////
+// Función para cargar usuarios desde la API
 async function loadUsers() {
   try {
     errorLoad.value = "";
@@ -139,31 +112,27 @@ async function loadUsers() {
   }
 }
 
-////////////////////////////////////////////////////////////
-// Crear un nuevo usuario
-////////////////////////////////////////////////////////////
+// Crear usuario
 async function handleCreateUser() {
   try {
     await createUser(newUserData.value);
-    showSuccess("Usuario creado exitosamente")
+    showSuccess("Usuario creado exitosamente");
     loadUsers();
     newUserData.value = { nombre: "", apellido: "", correo: "", password: "" };
   } catch (error) {
     errorCreate.value = "Error al crear usuario.";
-    showError("Error al crear usuario")
+    showError("Error al crear usuario");
   }
 }
 
-////////////////////////////////////////////////////////////
 // Editar usuario
-////////////////////////////////////////////////////////////
 function startEdit(user) {
   editUserId.value = user.id;
   editData.value = {
     nombre: user.nombre,
     apellido: user.apellido,
     correo: user.correo,
-    password: ""  // Para cambio opcional
+    password: ""  // Cambio opcional
   };
 }
 function cancelEdit() {
@@ -173,18 +142,16 @@ function cancelEdit() {
 async function handleUpdateUser(userId) {
   try {
     await updateUser(userId, editData.value);
-    showSuccess("Usuario actualizado exitosamente")
+    showSuccess("Usuario actualizado exitosamente");
     loadUsers();
     cancelEdit();
   } catch (error) {
-    showError("Error al actualizar usuario")
+    showError("Error al actualizar usuario");
     console.error("Error al actualizar usuario:", error);
   }
 }
 
-////////////////////////////////////////////////////////////
-// Eliminar usuario
-////////////////////////////////////////////////////////////
+// Eliminar usuario con confirmación
 async function handleDeleteUser(userId) {
   const result = await showConfirm({
     title: "¿Estás seguro?",
@@ -192,80 +159,34 @@ async function handleDeleteUser(userId) {
     icon: "warning",
     confirmButtonText: "Sí, eliminar",
     cancelButtonText: "Cancelar"
-  })
-
+  });
   if (result.isConfirmed) {
     try {
-      await deleteUser(userId)
-      showSuccess("Usuario eliminado exitosamente")
-      await loadUsers()
+      await deleteUser(userId);
+      showSuccess("Usuario eliminado exitosamente");
+      await loadUsers();
     } catch (error) {
-      console.error("Error al eliminar usuario:", error)
-      showError("No se pudo eliminar el usuario")
+      console.error("Error al eliminar usuario:", error);
+      showError("No se pudo eliminar el usuario");
     }
   }
 }
 
-////////////////////////////////////////////////////////////
-// Roles - Modal
-////////////////////////////////////////////////////////////
-async function openRolesModal(user) {
+// Funciones para abrir y cerrar el modal de roles
+function openRolesModal(user) {
   selectedUser.value = user;
   showRolesModal.value = true;
-
-  if (rolesList.value.length === 0) {
-    try {
-      // Cargar roles globales
-      const data = await getAllRoles();
-      rolesList.value = data; // array de { name: "admin" }, etc.
-    } catch (err) {
-      console.error("Error al cargar roles:", err);
-    }
-  }
 }
 function closeRolesModal() {
   showRolesModal.value = false;
-  selectedUser.value = {};
 }
 
-function userHasRole(roleName) {
-  if (!selectedUser.value.roles) return false;
-  return selectedUser.value.roles.some(r => r.name === roleName);
-}
-
-async function assignRole(userId, roleName) {
-  try {
-    await assignRoleToUser(userId, roleName);
-    // Actualizar local
-    if (!selectedUser.value.roles) {
-      selectedUser.value.roles = [];
-    }
-    selectedUser.value.roles.push({ name: roleName });
-    showSuccess("Rol asignado exitosamente")
-  } catch (err) {
-    console.error("Error al asignar rol:", err);
-    showSuccess("Rol asignado exitosamente")
-  }
-}
-
-async function removeRole(userId, roleName) {
-  try {
-    await removeRoleFromUser(userId, roleName);
-    if (selectedUser.value.roles) {
-      selectedUser.value.roles = selectedUser.value.roles.filter(r => r.name !== roleName);
-    }
-  } catch (err) {
-    console.error("Error al remover rol:", err);
-  }
-}
-
-////////////////////////////////////////////////////////////
-// onMounted => cargar usuarios
-////////////////////////////////////////////////////////////
+// Cargar usuarios al iniciar el componente
 loadUsers();
 </script>
 
 <style scoped>
+/* (Estilos para UsersView.vue se mantienen igual) */
 .users-container {
   max-width: 800px;
   margin: 2rem auto;
@@ -299,7 +220,6 @@ loadUsers();
   color: var(--white);
 }
 
-/* Cabecera de la lista de usuarios */
 .list-header {
   display: flex;
   align-items: center;
@@ -307,7 +227,6 @@ loadUsers();
   margin-bottom: 1rem;
 }
 
-/* Form de creación y edición */
 .create-section form,
 .edit-form {
   display: flex;
@@ -327,7 +246,6 @@ loadUsers();
   color: var(--white);
 }
 
-/* Botones generales */
 .create-section button,
 .list-section button {
   background-color: var(--accent-color);
@@ -345,14 +263,12 @@ loadUsers();
   background-color: var(--primary-color);
 }
 
-/* Errores */
 .error {
   margin-top: 0.5rem;
   color: var(--danger-color);
   font-weight: 500;
 }
 
-/* Lista de usuarios */
 .users-list {
   list-style: none;
   padding: 0;
@@ -377,7 +293,6 @@ loadUsers();
   margin-left: 0.5rem;
 }
 
-/* Texto cuando no hay usuarios */
 .no-users {
   font-style: italic;
   color: var(--light-gray);
