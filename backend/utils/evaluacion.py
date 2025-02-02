@@ -175,6 +175,16 @@ import tensorflow as tf
 import logging
 from typing import Dict
 
+# Configuración de logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("prediction.log"),
+        logging.StreamHandler()
+    ]
+)
+
 logger = logging.getLogger(__name__)
 
 # ------------------ CONSTANTES ------------------

@@ -6,7 +6,15 @@ from utils.procesamiento import preprocess_all_files
 from app.core.rol_auth import require_role
 from app.models.usuario_model import Usuario
 
-
+# Configuración de logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("app.log"),
+        logging.StreamHandler()
+    ]
+)
 
 logger = logging.getLogger(__name__)
 

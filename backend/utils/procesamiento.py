@@ -5,6 +5,18 @@ import logging
 import numpy as np
 from typing import List, Dict
 
+
+# Configuración de logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("preprocessing.log"),  # Guardar logs en un archivo
+        logging.StreamHandler()                   # Mostrar logs en consola
+    ]
+)
+
+
 logger = logging.getLogger(__name__)
 
 # ------------------ FUNCIONES DE NORMALIZACIÓN ------------------

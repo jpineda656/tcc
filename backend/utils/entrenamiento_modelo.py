@@ -9,7 +9,17 @@ from datetime import datetime
 from app.models.meta_entrenamiento_model import MetadatosEntrenamiento
 import logging
 
-# Uso de logger centralizado
+# Configuración de logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("training.log"),  # Guardar logs en archivo
+        logging.StreamHandler()               # Mostrar logs en consola
+    ]
+)
+
+
 logger = logging.getLogger(__name__)
 
 # ------------------ FUNCIONES DE PREPARACIÓN DE DATOS ------------------

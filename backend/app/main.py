@@ -18,33 +18,6 @@ from app.routers import (
     dashboard_router
 )
 
-# Configuración centralizada de logging
-logging_config = {
-    "version": 1,
-    "formatters": {
-        "default": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"}
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "default",
-            "level": logging.INFO
-        },
-        "file": {
-            "class": "logging.FileHandler",
-            "filename": "app.log",
-            "formatter": "default",
-            "level": logging.INFO
-        }
-    },
-    "root": {
-        "handlers": ["console", "file"],
-        "level": logging.INFO
-    }
-}
-
-logging.config.dictConfig(logging_config)
-logger = logging.getLogger(__name__)
 
 # Crear la aplicación con configuración centralizada
 app = FastAPI(
