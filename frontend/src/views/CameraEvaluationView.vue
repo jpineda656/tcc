@@ -41,9 +41,16 @@
       <!-- Sección para mostrar texto completo detectado -->
       <div class="recognized-words" v-if="recognizedWords.length">
         <h4>Texto detectado:</h4>
-        <p class="words-list">
+        <!-- Muestra las palabras una a lado de otra -->
+        <!-- <p class="words-list">
           {{ recognizedWords.join("") }}
-        </p>
+        </p> -->
+        <!-- Muestra las palabras una bajo otra -->
+        <ul class="words-list">
+          <li v-for="(word, index) in recognizedWords" :key="index">
+            {{ word }}
+          </li>
+        </ul>
       </div>
     </div>
 
@@ -60,6 +67,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
+import axios from "@/services/api";
 
 // Composable para inicializar Holistic y manejar la cámara
 import { useHolistic } from '@/utils/mediapipeUtils'
@@ -67,7 +75,9 @@ import { useHolistic } from '@/utils/mediapipeUtils'
 import { useDrawing } from '@/utils/drawingUtils'
 // Composable para la lógica de grabación (cuenta regresiva, captura)
 import { useRecording } from '@/utils/recordingUtils'
-import axios from "@/services/api";
+
+// Importar la función speak
+import { speak } from "@/utils/speak.js"
 
 const { 
   drawFaceLandmarks, 
@@ -103,6 +113,7 @@ const recognizedWords = ref([])
     // Supongamos que el backend retorna { predicted_label, confidence }
     if (result.predicted_label) {
       recognizedWords.value.push(result.predicted_label);
+      speak(result.predicted_label);
     }
 
   } catch (error) {
