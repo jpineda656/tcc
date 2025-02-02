@@ -1,20 +1,32 @@
-export function speak(text) {
-    if ('speechSynthesis' in window) {
-      // Crear un objeto de mensaje
-      const utterance = new SpeechSynthesisUtterance(text);
-      // Configurar idioma (ej. español)
-      utterance.lang = 'es-ES';
-      // Ajustar velocidad, pitch, volumen si quieres
-      utterance.rate = 1; // Velocidad (0.1 - 10)
-      utterance.pitch = 1; // Tono (0 - 2)
-      utterance.volume = 1;  // Puedes escoger entre las voces disponibles en el navegador
-      // Lanzar
-      window.speechSynthesis.speak(utterance);
+// frontend/src/utils/speak.js
 
-      const voices = window.speechSynthesis.getVoices();
-      console.log(voices); // Para ver cada voice.name, voice.lang, etc.
+/**
+ * speak(text, voiceObj)
+ * Reproduce en voz alta el texto dado.
+ * - text: la frase o palabra a pronunciar.
+ * - voiceObj: objeto de tipo SpeechSynthesisVoice (opcional). 
+ */
+export function speak(text, voiceObj) {
+  if ('speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    // Si tenemos un objeto de voz, lo aplicamos
+    if (voiceObj) {
+      utterance.voice = voiceObj;
+      // También podrías aplicar utterance.lang = voiceObj.lang 
+      // si deseas forzar el idioma exacto de la voz.
     } else {
-      console.warn("Este navegador no soporta speechSynthesis.");
+      // Fallback en caso de no tener uno. 
+      utterance.lang = 'es-ES'; 
     }
+
+    // Ajustar velocidad, pitch, volumen si lo deseas:
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    window.speechSynthesis.speak(utterance);
+  } else {
+    console.warn("Este navegador no soporta speechSynthesis.");
   }
-  
+}

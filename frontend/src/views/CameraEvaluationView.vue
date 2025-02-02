@@ -1,8 +1,6 @@
 <!-- src/views/CameraEvaluationView.vue -->
 <template>
-
   <div class="camera-container">
-    <!-- Panel de Controles -->
     <div class="controls">
       <h2>Evaluación del Modelo con MediaPipe</h2>
 
@@ -15,7 +13,53 @@
         {{ isCameraActive ? "Detener Cámara" : "Iniciar Cámara" }}
       </button>
 
-      <!-- Sección de Botones de grabación -->
+      <!-- Botón para mostrar configuración adicional -->
+      <button class="btn-settings" @click="showSettings = !showSettings">
+        Configuraciones Adicionales
+      </button>
+
+      <!-- Panel de configuración adicional (toggle con showSettings) -->
+      <div class="settings-panel" v-if="showSettings">
+        <h3>Configuraciones</h3>
+
+        <!-- 1) Ocultar/mostrar landmarks -->
+        <label>
+          <input type="checkbox" v-model="showLandmarks" />
+          Mostrar Puntos de Referencia
+        </label>
+
+        <!-- 2) Cambiar colores de landmarks -->
+        <div class="color-pickers">
+          <label>Color Manos Derecha:
+            <input type="color" v-model="landmarkColors.rightHand" />
+          </label>
+          <label>Color Manos Izquierda:
+            <input type="color" v-model="landmarkColors.leftHand" />
+          </label>
+          <label>Color Rostro:
+            <input type="color" v-model="landmarkColors.face" />
+          </label>
+          <label>Color Pose:
+            <input type="color" v-model="landmarkColors.pose" />
+          </label>
+        </div>
+
+        <!-- 3) Selección de voces en español -->
+        <div class="voice-select">
+          <label for="voice">Voz en Español:</label>
+          <select id="voice" v-model="selectedVoiceIndex">
+            <option
+              v-for="(voice, idx) in esVoices"
+              :key="idx"
+              :value="idx"
+            >
+              {{ voice.name }} ({{ voice.lang }})
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Botones de grabación -->
       <div class="recording-buttons">
         <button
           class="btn-record"
@@ -38,14 +82,9 @@
         <span>Comenzando en {{ countdown }}...</span>
       </div>
 
-      <!-- Sección para mostrar texto completo detectado -->
+      <!-- Palabras detectadas -->
       <div class="recognized-words" v-if="recognizedWords.length">
         <h4>Texto detectado:</h4>
-        <!-- Muestra las palabras una a lado de otra -->
-        <!-- <p class="words-list">
-          {{ recognizedWords.join("") }}
-        </p> -->
-        <!-- Muestra las palabras una bajo otra -->
         <ul class="words-list">
           <li v-for="(word, index) in recognizedWords" :key="index">
             {{ word }}
@@ -56,10 +95,7 @@
 
     <!-- Sección de Vista de Cámara / Canvas -->
     <div class="camera-view">
-      <!-- Video (oculto si no deseas mostrarlo) -->
       <video ref="videoRef" class="video-preview" playsinline></video>
-
-      <!-- Canvas donde se dibujan los landmarks -->
       <canvas ref="canvasRef" class="output-canvas"></canvas>
     </div>
   </div>
@@ -67,7 +103,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import axios from "@/services/api";
+import axios from "@/services/api"
 
 // Composable para inicializar Holistic y manejar la cámara
 import { useHolistic } from '@/utils/mediapipeUtils'
@@ -79,13 +115,15 @@ import { useRecording } from '@/utils/recordingUtils'
 // Importar la función speak
 import { speak } from "@/utils/speak.js"
 
-const { 
-  drawFaceLandmarks, 
-  drawPoseLandmarks, 
-  drawHandLandmarks 
-} = useDrawing()
+////////////////////////////////////////////////////////////
+// DIBUJO
+////////////////////////////////////////////////////////////
+const { drawFaceLandmarks, drawPoseLandmarks, drawHandLandmarks } = useDrawing()
 
-const { 
+////////////////////////////////////////////////////////////
+// GRABACIÓN
+////////////////////////////////////////////////////////////
+const {
   isRecording,
   isPreparing,
   countdown,
@@ -96,31 +134,60 @@ const {
   handleResults
 } = useRecording()
 
-// Variable para almacenar las palabras detectadas de forma acumulada
+////////////////////////////////////////////////////////////
+// ESTADOS
+////////////////////////////////////////////////////////////
+// Palabras detectadas
 const recognizedWords = ref([])
 
+// Control de cámara
+const {
+  videoRef,
+  canvasRef,
+  initHolistic,
+  toggleCamera,
+  isCameraActive
+} = useHolistic(onResultsHolistic)
+
+// Mostrar/ocultar panel de configuraciones
+const showSettings = ref(false)
+
+// Mostrar/ocultar landmarks
+const showLandmarks = ref(true)
+
+// Colores de landmarks
+const landmarkColors = ref({
+  rightHand: "#CC0000",  // Default color mano derecha
+  leftHand: "#00CC00",   // Default color mano izquierda
+  face: "#E0E0E0",       // Default color rostro
+  pose: "#FF00FF"        // Default color pose, ajusta a tu gusto
+})
+
+// Voces en español y selección
+const esVoices = ref([])            // Se llenará con getVoices() filtradas
+const selectedVoiceIndex = ref(0)   // Índice en esVoices
+
 /**
- * Función para enviar datos al backend cuando termina la grabación
- * (aquí se usa para evaluación en tiempo real, por ej. /realtime_evaluate).
+ * - Llamado cuando se complete la grabación y se envíen datos.
  */
- async function sendDataCallback(bodyData) {
+async function sendDataCallback(bodyData) {
   try {
     const response = await axios.post("/", bodyData);
-
-    // Si la respuesta es 2xx, obtenemos el resultado
     const result = response.data;
-    
-    // Supongamos que el backend retorna { predicted_label, confidence }
+
     if (result.predicted_label) {
       recognizedWords.value.push(result.predicted_label);
-      speak(result.predicted_label);
-    }
 
+      // Llamar a speak con la voz seleccionada
+      const voiceObj = esVoices.value[selectedVoiceIndex.value]
+      speak(result.predicted_label, voiceObj)
+    }
   } catch (error) {
     console.error("Error al enviar datos para evaluación:", error);
     alert("Ocurrió un error al enviar los datos para evaluación.");
   }
 }
+
 /**
  * Detener la grabación con la callback anterior.
  */
@@ -128,9 +195,9 @@ async function stopRecordingWithSend() {
   await stopRecording(sendDataCallback)
 }
 
-/* ==========================
-   Callback de Holistic
-   ========================== */
+/**
+ * onResultsHolistic: Se llama cada vez que Holistic produce landmarks.
+ */
 function onResultsHolistic(results) {
   const canvas = canvasRef.value
   const ctx = canvas.getContext('2d')
@@ -140,18 +207,17 @@ function onResultsHolistic(results) {
   ctx.save()
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height)
-
-  // Dibujar landmarks
-  drawFaceLandmarks(ctx, results.faceLandmarks)
-  drawPoseLandmarks(ctx, results.poseLandmarks)
-  drawHandLandmarks(ctx, results.rightHandLandmarks, '#CC0000', '#00FFFF')
-  drawHandLandmarks(ctx, results.leftHandLandmarks, '#00CC00', '#FFFF00')
   ctx.restore()
+
+  // Si showLandmarks es true, dibujamos
+  if (showLandmarks.value) {
+    drawAllLandmarks(ctx, results)
+  }
 
   // Determinar si hay manos detectadas
   const handDetected = !!(results.rightHandLandmarks || results.leftHandLandmarks)
 
-  // frameData: cara, manos, pose
+  // Armar frameData
   const frameData = {}
   if (results.faceLandmarks) {
     frameData.face = results.faceLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }))
@@ -166,41 +232,78 @@ function onResultsHolistic(results) {
     frameData.pose = results.poseLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }))
   }
 
-  // Lógica de grabación
+  // Grabar
   handleResults(handDetected, frameData, sendDataCallback)
 }
 
-/* ==========================
-   Inicialización de Holistic
-   ========================== */
-const {
-  videoRef,
-  canvasRef,
-  initHolistic,
-  toggleCamera,
-  isCameraActive
-} = useHolistic(onResultsHolistic)
+/**
+ * Función refactor para dibujar todos los landmarks con colores personalizables.
+ */
+function drawAllLandmarks(ctx, results) {
+  // Rostro
+  if (results.faceLandmarks) {
+    drawFaceLandmarks(ctx, results.faceLandmarks, {
+      color: landmarkColors.value.face, // <= cambiar if needed
+      lineWidth: 1
+    })
+  }
+  // Pose
+  if (results.poseLandmarks) {
+    drawPoseLandmarks(ctx, results.poseLandmarks, {
+      color: landmarkColors.value.pose,
+      lineWidth: 2
+    })
+  }
+  // Mano derecha
+  if (results.rightHandLandmarks) {
+    drawHandLandmarks(ctx, results.rightHandLandmarks, landmarkColors.value.rightHand, "#00FFFF")
+  }
+  // Mano izquierda
+  if (results.leftHandLandmarks) {
+    drawHandLandmarks(ctx, results.leftHandLandmarks, landmarkColors.value.leftHand, "#FFFF00")
+  }
+}
+
+////////////////////////////////////////////////////////////
+// Manejo de Voces en Español
+////////////////////////////////////////////////////////////
+function loadSpanishVoices() {
+  const allVoices = window.speechSynthesis.getVoices()
+  // Filtrar solo las voces es-*
+  const filtered = allVoices.filter(voice => voice.lang.startsWith("es"))
+  // Si quieres solo 4, recorta:
+  esVoices.value = filtered.slice(0, 4)
+  // Ajusta si no hay 4
+  if (esVoices.value.length === 0) {
+    console.warn("No hay voces en español disponibles en este navegador.")
+  }
+}
 
 onMounted(() => {
-  initHolistic(
-    {
-      modelComplexity: 2,
-      smoothLandmarks: true,
-      enableSegmentation: true,
-      smoothSegmentation: true,
-      refineFaceLandmarks: true,
-      selfieMode: true,
-      useCpuInference: false,
-      webGlVersion: 2,
-    },
-    '' // Ruta local al WASM o CDN si deseas
-  )
+  // Iniciar Holistic
+  initHolistic({
+    modelComplexity: 2,
+    smoothLandmarks: true,
+    enableSegmentation: true,
+    smoothSegmentation: true,
+    refineFaceLandmarks: true,
+    selfieMode: true,
+    useCpuInference: false,
+    webGlVersion: 2,
+  }, '')
+
+  // Cargar voces
+  if ('speechSynthesis' in window) {
+    // speechSynthesis.getVoices() puede estar vacío al primer load
+    // Se recomienda un callback
+    window.speechSynthesis.onvoiceschanged = loadSpanishVoices
+    // Llamar la primera vez
+    loadSpanishVoices()
+  }
 })
 </script>
 
 <style scoped>
-
-
 .camera-container {
   display: flex;
   flex-direction: row;
@@ -231,7 +334,9 @@ onMounted(() => {
   color: var(--white);
 }
 
-.btn-camera {
+/* Botones Principales */
+.btn-camera,
+.btn-settings {
   background-color: var(--primary-color);
   color: var(--white);
   padding: 0.5rem 1rem;
@@ -240,21 +345,43 @@ onMounted(() => {
   font-weight: 500;
   border-radius: 4px;
   transition: background-color 0.3s ease;
+  margin-bottom: 0.5rem;
 }
-
 .btn-camera.active {
   background-color: var(--danger-color);
 }
-
-.btn-camera:hover {
+.btn-camera:hover,
+.btn-settings:hover {
   background-color: var(--accent-color);
 }
 
+/* Panel de configuraciones */
+.settings-panel {
+  background-color: var(--dark-gray);
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  color: var(--white);
+}
+.settings-panel h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+.color-pickers,
+.voice-select {
+  margin: 0.5rem 0;
+}
+.color-pickers label,
+.voice-select label {
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+/* Botones de grabación */
 .recording-buttons {
   display: flex;
   gap: 1rem;
 }
-
 .btn-record {
   background-color: #27ae60;
   color: var(--white);
@@ -265,7 +392,6 @@ onMounted(() => {
   font-weight: 500;
   transition: background-color 0.3s ease;
 }
-
 .btn-record:disabled {
   cursor: not-allowed;
   opacity: 0.6;
@@ -273,7 +399,6 @@ onMounted(() => {
 .btn-record:hover:not(:disabled) {
   background-color: #2ecc71;
 }
-
 .btn-stop {
   background-color: var(--danger-color);
   color: var(--white);
@@ -284,7 +409,6 @@ onMounted(() => {
   font-weight: 500;
   transition: background-color 0.3s ease;
 }
-
 .btn-stop:disabled {
   cursor: not-allowed;
   opacity: 0.6;
@@ -293,10 +417,12 @@ onMounted(() => {
   background-color: #c0392b;
 }
 
+/* Countdown resaltado */
 .countdown-message {
-  color: var(--danger-color);
-  font-weight: 600;
-  font-size: 1.1rem;
+  color: #ff5252; 
+  font-weight: bold;
+  font-size: 1.4rem;
+  text-shadow: 1px 1px #000;
 }
 
 /* Palabras detectadas */
@@ -307,13 +433,15 @@ onMounted(() => {
   border-radius: 4px;
   color: var(--white);
 }
-
 .recognized-words .words-list {
   margin: 0;
-  font-size: 1rem;
+  padding-left: 1.2rem; /* deja algo de espacio para la lista */
+}
+.recognized-words .words-list li {
+  margin-bottom: 0.3rem;
 }
 
-/* Sección de cámara y canvas */
+/* Sección de la cámara y canvas */
 .camera-view {
   flex: 2;
   display: flex;
@@ -323,7 +451,7 @@ onMounted(() => {
 }
 
 .video-preview {
-  display: none; /* Oculte el video si desea solo canvas */
+  display: none; /* Ocúltalo si deseas */
   border: 1px solid var(--light-gray);
   width: 600px;
   height: 500px;
