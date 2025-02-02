@@ -114,6 +114,8 @@ async function handleDeleteRole(roleId) {
     console.error("Error al eliminar rol:", error);
   }
 }
+loadRoles();
+
 </script>
 
 <style scoped>
