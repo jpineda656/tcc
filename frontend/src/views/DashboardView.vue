@@ -23,7 +23,7 @@
         </div>
       </section>
 
-      <!-- Sección de Capturas -->
+      <!-- Sección de Capturas (con paginación) -->
       <section class="list-section">
         <div class="section-header">
           <h3>Historial de Capturas</h3>
@@ -64,7 +64,7 @@
         </table>
       </section>
 
-      <!-- Sección de Entrenamientos -->
+      <!-- Sección de Entrenamientos (con paginación) -->
       <section class="list-section">
         <div class="section-header">
           <h3>Historial de Entrenamientos</h3>
@@ -107,7 +107,7 @@
         </table>
       </section>
 
-      <!-- Sección de Usuarios (Opcional) -->
+      <!-- Sección de Usuarios (Opcional, con paginación) -->
       <section class="list-section">
         <div class="section-header">
           <h3>Listado de Usuarios (Opcional)</h3>
@@ -155,39 +155,45 @@ import { ref, onMounted, watch } from "vue";
 import TheNavbar from "@/components/TheNavbar.vue";
 import axios from "@/services/api";
 
-// Datos resumen
+// Estado para la información resumida
 const summaryData = ref({
   capture_count: 0,
   training_count: 0,
 });
 
+// ------------------
 // Capturas
+// ------------------
 const capturesList = ref([]);
 const pageCaptures = ref(1);
 const limitCaptures = ref(5); // Muestra 5 capturas por página
 
+// ------------------
 // Entrenamientos
+// ------------------
 const trainingsList = ref([]);
 const pageTrainings = ref(1);
 const limitTrainings = ref(5);
 
-// Usuarios (opcional)
+// ------------------
+// Usuarios (Opcional)
+// ------------------
 const usersList = ref([]);
 const pageUsers = ref(1);
 const limitUsers = ref(5);
 
-// ------------------------------
-// Función para formatear fecha
-// ------------------------------
+/**
+ * Formatea fecha a string legible
+ */
 function formatDate(dateStr) {
   if (!dateStr) return "-";
   const d = new Date(dateStr);
-  return d.toLocaleString(); 
+  return d.toLocaleString();
 }
 
-// ------------------------------
-// Cargar datos de resumen
-// ------------------------------
+/**
+ * Cargar datos de Resumen (cantidad de capturas, entrenamientos, etc.)
+ */
 async function fetchDashboardSummary() {
   try {
     const resp = await axios.get("/dashboard/data");
@@ -197,9 +203,9 @@ async function fetchDashboardSummary() {
   }
 }
 
-// ------------------------------
-// Cargar capturas (con paginación)
-// ------------------------------
+/**
+ * Cargar Capturas, usando la paginación actual (pageCaptures, limitCaptures)
+ */
 async function fetchCaptures() {
   try {
     const resp = await axios.get("/dashboard/captures", {
@@ -214,9 +220,9 @@ async function fetchCaptures() {
   }
 }
 
-// ------------------------------
-// Cargar entrenamientos (con paginación)
-// ------------------------------
+/**
+ * Cargar Entrenamientos, usando la paginación actual (pageTrainings, limitTrainings)
+ */
 async function fetchTrainings() {
   try {
     const resp = await axios.get("/dashboard/trainings", {
@@ -231,13 +237,11 @@ async function fetchTrainings() {
   }
 }
 
-// ------------------------------
-// Cargar usuarios (opcional)
-// ------------------------------
+/**
+ * Cargar Usuarios (opcional), usando la paginación actual (pageUsers, limitUsers)
+ */
 async function fetchUsers() {
   try {
-    // Ajusta al endpoint real
-    // e.g. GET /users?page=X&limit=Y
     const resp = await axios.get("/users", {
       params: {
         page: pageUsers.value,
@@ -250,7 +254,13 @@ async function fetchUsers() {
   }
 }
 
-// Llamar las funciones en onMounted
+/**
+ * Al montar, cargamos todo lo necesario:
+ * - resumen
+ * - lista capturas
+ * - lista entrenamientos
+ * - lista usuarios (opcional)
+ */
 onMounted(async () => {
   await fetchDashboardSummary();
   await fetchCaptures();
@@ -258,27 +268,30 @@ onMounted(async () => {
   await fetchUsers(); // si lo usas
 });
 
-// Reaccionar a cambios de página: vuelve a cargar
-watch([pageCaptures, limitCaptures], fetchCaptures);
-watch([pageTrainings, limitTrainings], fetchTrainings);
-watch([pageUsers, limitUsers], fetchUsers);
+/**
+ * Observamos los cambios en pageCaptures, limitCaptures
+ * y volvemos a cargar la lista de capturas
+ */
+watch([pageCaptures, limitCaptures], () => {
+  fetchCaptures();
+});
 
+/**
+ * Observamos cambios en pageTrainings, limitTrainings
+ */
+watch([pageTrainings, limitTrainings], () => {
+  fetchTrainings();
+});
+
+/**
+ * Observamos cambios en pageUsers, limitUsers
+ */
+watch([pageUsers, limitUsers], () => {
+  fetchUsers();
+});
 </script>
 
 <style scoped>
-/* Ajusta los colores según tu paleta global:
-   :root {
-     --dark-gray: #37474f;
-     --medium-gray: #546e7a;
-     --light-gray: #cfd8dc;
-     --primary-color: #2c3e50;
-     --accent-color: #1abc9c;
-     --danger-color: #e74c3c;
-     --text-color: #eceff1;
-     --white: #ffffff;
-   }
-*/
-
 .dashboard-container {
   max-width: 1100px;
   margin: 2rem auto;
@@ -293,6 +306,7 @@ watch([pageUsers, limitUsers], fetchUsers);
   text-align: center;
   font-size: 1.8rem;
   margin-bottom: 1rem;
+  color: var(--white);
 }
 
 /* Sección de tarjetas de resumen */
@@ -387,6 +401,7 @@ watch([pageUsers, limitUsers], fetchUsers);
 .data-table thead th {
   padding: 0.75rem;
   text-align: left;
+  color: var(--white);
 }
 .data-table tbody tr {
   transition: background-color 0.2s ease;
