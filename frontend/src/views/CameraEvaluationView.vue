@@ -42,7 +42,7 @@
       <div class="recognized-words" v-if="recognizedWords.length">
         <h4>Texto detectado:</h4>
         <p class="words-list">
-          {{ recognizedWords.join(" ") }}
+          {{ recognizedWords.join("") }}
         </p>
       </div>
     </div>

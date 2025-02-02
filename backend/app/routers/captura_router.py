@@ -34,10 +34,16 @@ async def capture_data(
     - **label**: Palabra asociada.
     - **framesData**: Datos de landmarks por fotograma.
     """
+    
+    def safe_label(label: str) -> str:
+        temp = label.replace(" ", "_")
+        return temp
     try:
         # Crear el nombre del archivo basado en la palabra y un timestamp
+        clean_label = safe_label(data.label)
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        file_name = f"{data.label}_{len(data.framesData)}_{timestamp}.json"
+        file_name = f"{clean_label}_{len(data.framesData)}_{timestamp}.json"
+        ##file_name = f"{data.label}_{len(data.framesData)}_{timestamp}.json"
         file_path = os.path.join(DATA_DIR, file_name)
 
         # Guardar los datos en un archivo JSON de forma asíncrona
