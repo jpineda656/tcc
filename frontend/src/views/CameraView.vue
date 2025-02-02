@@ -1,65 +1,88 @@
-<!-- src/views/cameraView.vue -->
+<!-- src/views/CameraView.vue -->
 <template>
   <TheNavbar />
 
   <div class="camera-container">
-    <!-- Sección de Configuración / Acciones -->
+    <!-- Sección de Controles / Acciones -->
     <div class="controls">
       <h2>Captura de Señas con MediaPipe</h2>
 
-      <!-- Botón para activar/desactivar la cámara -->
-      <button class="btn-camera" :class="{ active: isCameraActive }" @click="toggleCamera">
-        {{ isCameraActive ? 'Detener Cámara' : 'Iniciar Cámara' }}
+      <!-- Botón para activar/desactivar cámara -->
+      <button
+        class="btn-camera"
+        :class="{ active: isCameraActive }"
+        @click="toggleCamera"
+      >
+        {{ isCameraActive ? "Detener Cámara" : "Iniciar Cámara" }}
       </button>
 
-      <!-- Input para la palabra/seña -->
+      <!-- Campo para la palabra o seña -->
       <div class="sign-input">
         <label for="sign-label">Palabra/Seña</label>
-        <input id="sign-label" v-model="signLabel" type="text" placeholder="Ej: Hola" />
+        <input
+          id="sign-label"
+          v-model="signLabel"
+          type="text"
+          placeholder="Ej: Hola"
+        />
       </div>
 
-      <!-- Botones de grabación -->
+      <!-- Botones de Grabación -->
       <div class="recording-buttons">
-        <button class="btn-record" @click="prepareRecording" :disabled="!isCameraActive || isPreparing || isRecording">
+        <button
+          class="btn-record"
+          @click="prepareRecording"
+          :disabled="!isCameraActive || isPreparing || isRecording"
+        >
           Iniciar Grabación
         </button>
-        <button class="btn-stop" @click="stopRecordingWithSend"
-          :disabled="!isCameraActive || (!isPreparing && !isRecording)">
+        <button
+          class="btn-stop"
+          @click="stopRecordingWithSend"
+          :disabled="!isCameraActive || (!isPreparing && !isRecording)"
+        >
           Detener y Enviar
         </button>
       </div>
 
-      <!-- Mensajes de estado: cuenta regresiva o grabando -->
+      <!-- Zona de mensajes de estado (cuenta regresiva / grabación) -->
       <div class="status-message">
         <!-- Mostrar cuenta regresiva si isPreparing -->
-        <div v-if="isPreparing" class="countdown-message">
-          <span>Comenzando en {{ countdown }}...</span>
+        <div v-if="isPreparing" class="countdown-message highlight-msg">
+          <!-- Mensaje mejorado -->
+          <span>¡Preparando en {{ countdown }} segundos!</span>
         </div>
 
         <!-- Mostrar "Grabando" si isRecording -->
-        <div v-else-if="isRecording" class="recording-indicator">
+        <div v-else-if="isRecording" class="recording-indicator highlight-msg">
           <span>Grabando...</span>
-          <span>Fotogramas capturados: {{ capturedFrames.length }}</span>
+          <span>Frames: {{ capturedFrames.length }}</span>
         </div>
       </div>
 
       <!-- Contador de gestos capturados en la sesión -->
-      <div class="session-count" v-if="capturedGesturesCount > 0">
-        <p>Gestos capturados en esta sesión: {{ capturedGesturesCount }}</p>
+      <div
+        class="session-count info-message"
+        v-if="capturedGesturesCount > 0"
+      >
+        <p>
+          Gestos capturados en esta sesión: 
+          <strong>{{ capturedGesturesCount }}</strong>
+        </p>
       </div>
 
-      <!-- Mensaje de éxito -->
-      <div v-if="successMessage" class="success-message">
+      <!-- Mensaje de éxito cuando se envían datos -->
+      <div v-if="successMessage" class="success-message highlight-msg">
         {{ successMessage }}
       </div>
     </div>
 
-    <!-- Sección de Vista de Cámara / Canvas -->
+    <!-- Vista de Cámara / Canvas -->
     <div class="camera-view">
-      <!-- Video (oculto si no se quiere mostrar) -->
+      <!-- Video (oculto por defecto si no deseas mostrarlo) -->
       <video ref="videoRef" class="video-preview" playsinline></video>
 
-      <!-- Canvas donde se dibujan los landmarks -->
+      <!-- Canvas con los landmarks dibujados -->
       <canvas ref="canvasRef" class="output-canvas"></canvas>
     </div>
   </div>
@@ -68,20 +91,21 @@
 <script setup>
 import TheNavbar from "@/components/TheNavbar.vue";
 import { onMounted, ref } from "vue";
+
+// Hooks (composables) de MediaPipe y dibujo
 import { useHolistic } from "@/utils/mediapipeUtils";
 import { useDrawing } from "@/utils/drawingUtils";
+
+// Hook para la lógica de grabación (cuenta regresiva, frames, etc.)
 import { useRecording } from "@/utils/recordingUtils";
 
+// Cliente HTTP (Axios)
 import axios from "@/services/api";
 
-// Dibujo (cara, pose, manos)
-const {
-  drawFaceLandmarks,
-  drawPoseLandmarks,
-  drawHandLandmarks
-} = useDrawing();
+// Extraemos las funciones de dibujo
+const { drawFaceLandmarks, drawPoseLandmarks, drawHandLandmarks } = useDrawing();
 
-// Lógica de grabación
+// Extraemos la lógica de grabación
 const {
   signLabel,
   isRecording,
@@ -95,39 +119,37 @@ const {
   capturedGesturesCount
 } = useRecording();
 
-// Mensaje de éxito
+// Mensaje de éxito (cuando se envían datos)
 const successMessage = ref("");
 
-
-
 /**
- * Callback para enviar datos al backend.
- * Puedes modificar la URL o usar axios.
+ * Callback que envía datos al backend una vez completada la grabación.
  */
 async function sendDataCallback(bodyData) {
   try {
     const response = await axios.post("/captura", bodyData);
-    successMessage.value = "Datos enviados correctamente al servidor";
-    // Limpiar el mensaje después de 3 segundos
+    // Mensaje mejorado
+    successMessage.value = "¡Datos enviados con éxito al servidor!";
+    // Limpiar el mensaje tras 3s
     setTimeout(() => {
       successMessage.value = "";
     }, 3000);
   } catch (error) {
     console.error("Error al enviar datos:", error);
-    alert("Ocurrió un error al enviar los datos.");
+    alert("Ocurrió un error al enviar los datos al servidor.");
   }
 }
 
 /**
- * stopRecording con callback para envío de datos.
+ * Detener la grabación y mandar datos al backend con la callback.
  */
 async function stopRecordingWithSend() {
   await stopRecording(sendDataCallback);
 }
 
-/* ==========================
-   Callback de Holistic
-   ========================== */
+/**
+ * Callback de Holistic: se llama cada frame para dibujar landmarks y capturar info.
+ */
 function onResultsHolistic(results) {
   const canvas = canvasRef.value;
   const ctx = canvas.getContext("2d");
@@ -138,54 +160,37 @@ function onResultsHolistic(results) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
 
-  // Dibujo
+  // Dibujo de landmarks con colores
   drawFaceLandmarks(ctx, results.faceLandmarks);
   drawPoseLandmarks(ctx, results.poseLandmarks);
   drawHandLandmarks(ctx, results.rightHandLandmarks, "#CC0000", "#00FFFF");
   drawHandLandmarks(ctx, results.leftHandLandmarks, "#00CC00", "#FFFF00");
+
   ctx.restore();
 
-  // Determinar si hay manos detectadas
+  // Verificar si hay manos detectadas (bool)
   const handDetected = !!(results.rightHandLandmarks || results.leftHandLandmarks);
 
-  // frameData con cara/pose/manos
+  // Armar frameData para grabación
   const frameData = {};
   if (results.faceLandmarks) {
-    frameData.face = results.faceLandmarks.map(lm => ({
-      x: lm.x,
-      y: lm.y,
-      z: lm.z,
-    }));
+    frameData.face = results.faceLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }));
   }
   if (results.rightHandLandmarks) {
-    frameData.rightHand = results.rightHandLandmarks.map(lm => ({
-      x: lm.x,
-      y: lm.y,
-      z: lm.z,
-    }));
+    frameData.rightHand = results.rightHandLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }));
   }
   if (results.leftHandLandmarks) {
-    frameData.leftHand = results.leftHandLandmarks.map(lm => ({
-      x: lm.x,
-      y: lm.y,
-      z: lm.z,
-    }));
+    frameData.leftHand = results.leftHandLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }));
   }
   if (results.poseLandmarks) {
-    frameData.pose = results.poseLandmarks.map(lm => ({
-      x: lm.x,
-      y: lm.y,
-      z: lm.z,
-    }));
+    frameData.pose = results.poseLandmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }));
   }
 
-  // Llamar a la función del composable
+  // Pasar a handleResults (composable) para grabar
   handleResults(handDetected, frameData, sendDataCallback);
 }
 
-/* ==========================
-   Inicializar Holistic
-   ========================== */
+// Inicializar Holistic y cámara
 const {
   videoRef,
   canvasRef,
@@ -206,19 +211,13 @@ onMounted(() => {
       useCpuInference: false,
       webGlVersion: 2,
     },
-    "" // Ruta local, ajusta si requieres otra
+    ""
   );
 });
 </script>
 
 <style scoped>
-
-.recording-indicator span:first-child {
-  color: #27ae60; /* Verde */
-  font-weight: bold;
-  margin-right: 0.5rem;
-}
-/* Contenedor principal */
+/* Container principal */
 .camera-container {
   display: flex;
   flex-direction: row;
@@ -231,7 +230,7 @@ onMounted(() => {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Sección de controles (lado izquierdo) */
+/* Panel de controles (izquierda) */
 .controls {
   flex: 1;
   display: flex;
@@ -243,6 +242,7 @@ onMounted(() => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
+/* Título */
 .controls h2 {
   margin: 0;
   font-size: 1.2rem;
@@ -261,27 +261,23 @@ onMounted(() => {
   border-radius: 4px;
   transition: background-color 0.3s ease;
 }
-
 .btn-camera.active {
   background-color: var(--danger-color);
 }
-
 .btn-camera:hover {
   background-color: var(--accent-color);
 }
 
-/* Entrada de la seña */
+/* Input de la seña */
 .sign-input {
   display: flex;
   flex-direction: column;
 }
-
 .sign-input label {
   font-size: 0.9rem;
   margin-bottom: 0.3rem;
   color: var(--white);
 }
-
 .sign-input input {
   border: 1px solid var(--light-gray);
   padding: 0.4rem;
@@ -295,8 +291,6 @@ onMounted(() => {
   display: flex;
   gap: 1rem;
 }
-
-/* Botón grabar */
 .btn-record {
   background-color: #27ae60;
   color: var(--white);
@@ -307,17 +301,13 @@ onMounted(() => {
   font-weight: 500;
   transition: background-color 0.3s ease;
 }
-
 .btn-record:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
-
 .btn-record:hover:not(:disabled) {
   background-color: #2ecc71;
 }
-
-/* Botón detener */
 .btn-stop {
   background-color: var(--danger-color);
   color: var(--white);
@@ -328,32 +318,61 @@ onMounted(() => {
   font-weight: 500;
   transition: background-color 0.3s ease;
 }
-
 .btn-stop:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
-
 .btn-stop:hover:not(:disabled) {
   background-color: #c0392b;
 }
 
-/* Cuenta regresiva */
+/* Mensajes de estado (cuenta regresiva, grabando) */
+.status-message {
+  margin-top: 0.5rem;
+}
 .countdown-message {
-  color: var(--danger-color);
-  font-weight: 600;
+  background-color: #ff5252;
+  color: #fff;
+  padding: 0.4rem 0.7rem;
+  border-radius: 4px;
+  font-weight: bold;
   font-size: 1.1rem;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  margin-bottom: 0.3rem;
+}
+.recording-indicator {
+  background-color: #2ecc71;
+  color: #fff;
+  padding: 0.4rem 0.7rem;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 1.0rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Contador de gestos en la sesión */
+.session-count {
+  background-color: #3498db;
+  color: #fff;
+  padding: 0.4rem 0.7rem;
+  border-radius: 4px;
+  font-size: 1rem;
 }
 
 /* Mensaje de éxito */
 .success-message {
-  color: #27ae60;
+  background-color: #27ae60;
+  color: #fff;
+  padding: 0.4rem 0.7rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
   font-weight: bold;
   font-size: 1rem;
-  margin-top: 1rem;
 }
 
-/* Sección de la cámara y canvas (lado derecho) */
+/* Sección de la cámara (derecha) */
 .camera-view {
   flex: 2;
   display: flex;
@@ -362,10 +381,9 @@ onMounted(() => {
   justify-content: center;
 }
 
-/* Video de previsualización */
+/* Video */
 .video-preview {
-  display: none;
-  /* Ocúltalo si no deseas mostrarlo */
+  display: none; /* Ocúltalo si no deseas */
   border: 1px solid var(--light-gray);
   width: 600px;
   height: 500px;
@@ -373,7 +391,7 @@ onMounted(() => {
   margin-bottom: 1rem;
 }
 
-/* Canvas donde se dibujan landmarks */
+/* Canvas */
 .output-canvas {
   border: 1px solid var(--light-gray);
   width: 600px;
