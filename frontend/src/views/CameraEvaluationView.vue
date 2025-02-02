@@ -113,7 +113,7 @@ import { useDrawing } from '@/utils/drawingUtils'
 import { useRecording } from '@/utils/recordingUtils'
 
 // Importar la función speak
-import { speak } from "@/utils/speak.js"
+import { speak } from "@/utils/speakUtils.js"
 
 ////////////////////////////////////////////////////////////
 // DIBUJO

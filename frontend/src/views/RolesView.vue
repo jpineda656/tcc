@@ -55,6 +55,7 @@
 import TheNavbar from "@/components/TheNavbar.vue";
 import { ref } from "vue";
 import { getAllRoles, createRole, updateRole, deleteRole } from "@/services/apiRoles";
+import { showConfirm,showSuccess, showError } from "@/utils/alertUtils";
 
 const roles = ref([]);
 const newRoleData = ref({ nombre_rol: "" });
@@ -80,10 +81,12 @@ async function loadRoles() {
 async function handleCreateRole() {
   try {
     await createRole(newRoleData.value);
+    showSuccess("El rol fue creado exitosamente")
     loadRoles();
     newRoleData.value = { nombre_rol: "" };
   } catch (error) {
     errorCreate.value = "Error al crear rol.";
+    showError("Error al crear el Rol")
   }
 }
 
@@ -99,6 +102,7 @@ function cancelEdit() {
 async function handleUpdateRole(roleId) {
   try {
     await updateRole(roleId, editData.value);
+    showSuccess("El rol fue editado exitosamente")
     loadRoles();
     cancelEdit();
   } catch (error) {
@@ -107,11 +111,22 @@ async function handleUpdateRole(roleId) {
 }
 
 async function handleDeleteRole(roleId) {
-  try {
-    await deleteRole(roleId);
-    loadRoles();
-  } catch (error) {
-    console.error("Error al eliminar rol:", error);
+  const result = await showConfirm({
+    title: "¿Estás seguro?",
+    text: "Esta acción no se puede deshacer",
+    icon: "warning",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar"
+  })
+  if (result.isConfirmed) {
+    try {
+      await deleteRole(roleId);
+      showSuccess("El rol fue eliminado exitosamente");
+      loadRoles();
+    } catch (error) {
+     console.error("Error al eliminar rol:", error);
+     showError("El rol no pudo ser eliminado");
+    }
   }
 }
 loadRoles();
