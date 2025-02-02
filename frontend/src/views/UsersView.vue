@@ -95,6 +95,7 @@
 <script setup>
 import { ref } from "vue";
 import TheNavbar from "@/components/TheNavbar.vue";
+import { showConfirm, showSuccess, showError } from "@/utils/alertUtils"
 import {
   getAllUsers,
   createUser,
@@ -107,6 +108,7 @@ import {
 
 const users = ref([]);
 const newUserData = ref({ nombre: "", apellido: "", correo: "", password: "" });
+
 
 // Para editar usuario
 const editUserId = ref(null);
@@ -143,10 +145,12 @@ async function loadUsers() {
 async function handleCreateUser() {
   try {
     await createUser(newUserData.value);
+    showSuccess("Usuario creado exitosamente")
     loadUsers();
     newUserData.value = { nombre: "", apellido: "", correo: "", password: "" };
   } catch (error) {
     errorCreate.value = "Error al crear usuario.";
+    showError("Error al crear usuario")
   }
 }
 
@@ -169,9 +173,11 @@ function cancelEdit() {
 async function handleUpdateUser(userId) {
   try {
     await updateUser(userId, editData.value);
+    showSuccess("Usuario actualizado exitosamente")
     loadUsers();
     cancelEdit();
   } catch (error) {
+    showError("Error al actualizar usuario")
     console.error("Error al actualizar usuario:", error);
   }
 }
@@ -180,11 +186,23 @@ async function handleUpdateUser(userId) {
 // Eliminar usuario
 ////////////////////////////////////////////////////////////
 async function handleDeleteUser(userId) {
-  try {
-    await deleteUser(userId);
-    loadUsers();
-  } catch (error) {
-    console.error("Error al eliminar usuario:", error);
+  const result = await showConfirm({
+    title: "¿Estás seguro?",
+    text: "Esta acción no se puede deshacer",
+    icon: "warning",
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar"
+  })
+
+  if (result.isConfirmed) {
+    try {
+      await deleteUser(userId)
+      showSuccess("Usuario eliminado exitosamente")
+      await loadUsers()
+    } catch (error) {
+      console.error("Error al eliminar usuario:", error)
+      showError("No se pudo eliminar el usuario")
+    }
   }
 }
 
