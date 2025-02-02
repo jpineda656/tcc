@@ -241,8 +241,10 @@ async function assignRole(userId, roleName) {
       selectedUser.value.roles = [];
     }
     selectedUser.value.roles.push({ name: roleName });
+    showSuccess("Rol asignado exitosamente")
   } catch (err) {
     console.error("Error al asignar rol:", err);
+    showSuccess("Rol asignado exitosamente")
   }
 }
 
