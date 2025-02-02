@@ -1,4 +1,4 @@
-// src/store/index.js
+// frontend/src/store/index.js
 import { createPinia } from "pinia";
 
 const pinia = createPinia();

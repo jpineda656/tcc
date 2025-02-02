@@ -167,6 +167,7 @@
 #     except Exception as e:
 #         logger.error(f"Error en la predicción: {e}")
 #         raise e
+# backend/utils/evaluacion.py
 import os
 import json
 import numpy as np

@@ -1,4 +1,4 @@
-<!-- src/views/CameraView.vue -->
+<!--frontend/src/views/CameraView.vue -->
 <template>
   <TheNavbar />
 

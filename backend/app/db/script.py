@@ -1,3 +1,4 @@
+# backend/app/db/script.py
 from app.models.usuario_model import Base
 from app.db.coneccion import engine
 

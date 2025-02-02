@@ -1,4 +1,4 @@
-<!-- src/views/ProcessView.vue -->
+<!-- frontend/src/views/ProcessView.vue -->
 <template>
   <TheNavbar />
 

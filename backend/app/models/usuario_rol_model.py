@@ -1,3 +1,4 @@
+# backend/app/models/usuario_rol_model.py
 from sqlalchemy import Table, Column, Integer, ForeignKey
 from app.models.clase_base import Base
 

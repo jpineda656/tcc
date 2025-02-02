@@ -1,3 +1,4 @@
+# backend/app/routers/entrenamiento_router.py
 from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy.orm import Session
 from app.models.meta_entrenamiento_model import MetadatosEntrenamiento

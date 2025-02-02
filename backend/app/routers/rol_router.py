@@ -1,3 +1,4 @@
+# backend/app/routers/rol_router.py
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session

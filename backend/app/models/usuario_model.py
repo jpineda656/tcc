@@ -1,3 +1,4 @@
+# backend/app/models/usuario_model.py
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 from app.models.clase_base import Base

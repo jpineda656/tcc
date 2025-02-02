@@ -1,4 +1,4 @@
-<!-- src/views/DashboardView.vue -->
+<!-- frontend/src/views/DashboardView.vue -->
 <template>
   <div>
     <TheNavbar />

@@ -1,4 +1,4 @@
-// src/utils/recordingUtils.js
+// frontend/src/utils/recordingUtils.js
 
 import { ref } from 'vue'
 

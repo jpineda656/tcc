@@ -1,3 +1,4 @@
+# backend/app/services/rol_service.py
 import logging
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status

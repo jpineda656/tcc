@@ -1,4 +1,4 @@
-// src/router/index.js
+//frontend/src/router/index.js
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 

@@ -1,4 +1,4 @@
-# app/initial_data.py
+# backend/app/initial_data.py
 
 from app.db.coneccion import SessionLocal
 from app.services.rol_service import create_role, get_role_by_name

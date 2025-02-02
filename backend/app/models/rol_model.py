@@ -1,3 +1,4 @@
+# backend/app/models/rol_model.py
 from sqlalchemy import Column, Integer, String
 from app.models.clase_base import Base
 

@@ -1,4 +1,4 @@
-# app/routers/dashboard_router.py
+# backend/app/routers/dashboard_router.py
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session

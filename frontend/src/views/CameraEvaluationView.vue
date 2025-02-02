@@ -1,4 +1,4 @@
-<!-- src/views/CameraEvaluationView.vue -->
+<!-- frontend/src/views/CameraEvaluationView.vue -->
 <template>
   <div class="camera-container">
     <div class="controls">

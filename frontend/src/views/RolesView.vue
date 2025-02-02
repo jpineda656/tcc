@@ -1,4 +1,4 @@
-<!-- src/views/RolesView.vue -->
+<!-- frontend/src/views/RolesView.vue -->
 <template>
   <div>
     <TheNavbar />

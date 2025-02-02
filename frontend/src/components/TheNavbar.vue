@@ -1,4 +1,4 @@
-<!-- src/components/TheNavbar.vue -->
+<!-- frontend/src/components/TheNavbar.vue -->
 <template>
   <nav class="navbar">
     <div class="navbar-container">

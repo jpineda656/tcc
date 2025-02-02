@@ -1,4 +1,4 @@
-<!-- src/main.js -->
+<!-- frontend/src/main.js -->
 
 <script setup>
 </script>

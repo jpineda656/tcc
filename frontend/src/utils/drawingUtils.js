@@ -1,4 +1,4 @@
-// src/utils/drawingUtils.js
+//frontend/src/utils/drawingUtils.js
 import {
     FACEMESH_TESSELATION,
     FACEMESH_RIGHT_EYE,

@@ -1,4 +1,4 @@
-// src/utils/mediapipeUtils.js
+//frontend/src/utils/mediapipeUtils.js
 
 import { ref, onBeforeUnmount } from 'vue'
 import { Holistic } from '@mediapipe/holistic'

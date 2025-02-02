@@ -1,4 +1,4 @@
-// src/store/auth.js
+// frontend/src/store/auth.js
 import { defineStore } from "pinia";
 import axios from "axios";
 
