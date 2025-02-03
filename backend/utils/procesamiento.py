@@ -29,7 +29,9 @@ def fill_missing_landmarks(frame: Dict) -> Dict:
         "pose": 33,
         "leftHand": 21,
         "rightHand": 21,
-        "face": 468
+        "face": 33 #solo contorno facial
+        
+        # "face": 468 #rostro completo
     }
 
     def fill_landmarks(points, expected_count):
