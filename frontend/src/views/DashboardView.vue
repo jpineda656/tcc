@@ -110,7 +110,7 @@
       <!-- Sección de Usuarios (Opcional, con paginación) -->
       <section class="list-section">
         <div class="section-header">
-          <h3>Listado de Usuarios (Opcional)</h3>
+          <h3>Listado de Usuarios</h3>
           <div class="pagination-controls">
             <button
               :disabled="pageUsers <= 1"
@@ -238,7 +238,7 @@ async function fetchTrainings() {
 }
 
 /**
- * Cargar Usuarios (opcional), usando la paginación actual (pageUsers, limitUsers)
+ * Cargar Usuarios, usando la paginación actual (pageUsers, limitUsers)
  */
 async function fetchUsers() {
   try {
@@ -259,7 +259,7 @@ async function fetchUsers() {
  * - resumen
  * - lista capturas
  * - lista entrenamientos
- * - lista usuarios (opcional)
+ * - lista usuarios
  */
 onMounted(async () => {
   await fetchDashboardSummary();

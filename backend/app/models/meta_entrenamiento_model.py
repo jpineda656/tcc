@@ -21,7 +21,7 @@ class MetadatosEntrenamiento(Base):
     # Estado del entrenamiento (started, completed, failed, etc.)
     estado = Column(String(50), default="started")
 
-    # (Opcional) Métricas o hiperparámetros
+    # Métricas o hiperparámetros
     exactitud = Column(String(50), nullable=True)
     perdida = Column(String(50), nullable=True)
 
