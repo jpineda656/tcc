@@ -12,7 +12,6 @@
         :disabled="isProcessing"
         @click="handleNormalization"
       >
-        <!-- Texto cambia si ya está corriendo normalización -->
         <span v-if="isProcessing && currentProcess === 'normalization'">
           Normalizando (background)...
         </span>
@@ -41,7 +40,7 @@
       </p>
     </div>
 
-    <!-- Mensaje de error -->
+    <!-- Mensaje de error (si ocurre) -->
     <p v-if="errorMessage" class="error">
       {{ errorMessage }}
     </p>
@@ -53,6 +52,9 @@ import { ref, computed } from "vue";
 import TheNavbar from "@/components/TheNavbar.vue";
 import axios from "@/services/api";
 
+// Importar nuestras utils de alertas SweetAlert2
+import { showSuccess, showError } from "@/utils/alertUtils";
+
 /**
  * ESTADOS
  */
@@ -60,9 +62,6 @@ const isProcessing = ref(false);
 const currentProcess = ref(""); // "normalization" | "training"
 const errorMessage = ref("");
 
-/** 
- * Computed: texto amigable 
- */
 function currentProcessLabel() {
   if (currentProcess.value === "normalization") return "Normalización";
   if (currentProcess.value === "training") return "Entrenamiento";
@@ -70,6 +69,7 @@ function currentProcessLabel() {
 }
 const currentProcessLabelComputed = computed(currentProcessLabel);
 
+// Variable para el pollingInterval
 let pollingInterval = null;
 
 /**
@@ -124,8 +124,8 @@ async function handleTraining() {
 /**
  * startPolling
  * - Llama repetidamente al endpoint `statusUrl` cada 2s
- * - Si `status==="completed"`, detiene polling y alerta
- * - Si `status==="failed"`, detiene polling y alerta error
+ * - Si `status==="completed"`, detiene polling y showSuccess
+ * - Si `status==="failed"`, detiene polling y showError
  */
 function startPolling(statusUrl, successMsg) {
   pollingInterval = setInterval(async () => {
@@ -136,12 +136,12 @@ function startPolling(statusUrl, successMsg) {
         clearInterval(pollingInterval);
         pollingInterval = null;
         isProcessing.value = false;
-        alert(successMsg);
+        showSuccess(successMsg);
       } else if (status === "failed") {
         clearInterval(pollingInterval);
         pollingInterval = null;
         isProcessing.value = false;
-        alert("La tarea falló en el backend.");
+        showError("La tarea falló en el backend.");
       }
     } catch (err) {
       console.error("Error en polling:", err);
